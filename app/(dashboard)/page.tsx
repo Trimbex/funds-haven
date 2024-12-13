@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <Button>
-      Click me
-    </Button>
+    <p>
+      Logged on can see this msg 
+    </p>
   );
 }
