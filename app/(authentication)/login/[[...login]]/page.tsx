@@ -26,13 +26,13 @@ export default function Page() {
           </ClerkLoading>
         </div>
       </div>
-      <div className="h-full bg-blue-900  hidden lg:flex items-center justify-center ">
+      <div className="h-full bg-blue-500  hidden lg:flex items-center justify-center ">
         <Image
-          src="/loginPagePicture.png"
-          height={200}
-          width={400}
-          className=""
-          alt="Login Page Image"
+            src="/loginPagePicture.png"
+            height={200}
+            width={400}
+            className=""
+            alt="Login Page Image"
         />
       </div>
     </div>
