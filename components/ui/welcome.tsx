@@ -37,8 +37,10 @@ export const WelcomeMessage = () => {
   const showName = displayText.length > beforeName.length;
 
   return (
-    <div className="flex justify-left items-center min-h-[20vh] pt-36 pl-96">
-      <div className="font-mono text-6xl font-bold text-center">
+    <div className="flex items-center min-h-[20vh] 
+                    px-4 sm:px-6 md:px-8 lg:pl-96 
+                    pt-16 sm:pt-24 md:pt-32 lg:pt-36">
+      <div className="font-mono text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold">
         {beforeName}
         {showName && <span className="text-sky-400">{name}</span>}
         {!isComplete && <span className="animate-pulse">|</span>}
