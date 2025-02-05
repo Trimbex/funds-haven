@@ -1,6 +1,6 @@
-import { useUser } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 
+// Custom hook for typewriter effect
 const useTypewriter = (text: string, speed: number = 100) => {
   const [displayText, setDisplayText] = useState<string>("");
   const [isComplete, setIsComplete] = useState<boolean>(false);
@@ -26,8 +26,11 @@ const useTypewriter = (text: string, speed: number = 100) => {
 };
 
 export const WelcomeMessage = () => {
-  const { user, isLoaded } = useUser();
-  const welcomeText = ` Welcome, ${user?.firstName || 'Guest'}`;
+  // Hardcoding user as Saif
+  const user = { firstName: "Saif" };
+  const isLoaded = true; // Simulating that the user data is loaded
+
+  const welcomeText = `Welcome, ${user?.firstName || 'Guest'}`;
   const { displayText, isComplete } = useTypewriter(isLoaded ? welcomeText : '');
 
   // Split the text to apply different styles to firstName
