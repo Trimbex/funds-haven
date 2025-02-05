@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { FaBell } from 'react-icons/fa';
 import { HiMenu } from 'react-icons/hi';
 import { Nav } from './nav';  
-import { UserButton, ClerkLoading, ClerkLoaded } from '@clerk/nextjs';
 import { WelcomeMessage } from './welcome';
 
 export const Header = () => {
@@ -40,10 +39,10 @@ export const Header = () => {
                     <button className="text-gray-600 hover:text-[#009dff] transition-all duration-300">
                         <FaBell className="w-6 h-6" />
                     </button>
-                    <ClerkLoaded><UserButton afterSignOutUrl="/" /></ClerkLoaded>
-                    <ClerkLoading>
+                    
+                    
                         <div className="h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center" />  
-                    </ClerkLoading>
+                    
                     {  
                     /* Placeholder
                     <div className="h-8 w-8 bg-gray-300 rounded-full flex items-center justify-center">
