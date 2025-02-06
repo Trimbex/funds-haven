@@ -34,3 +34,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+public/ASU331.pdf
+public/sec1-ASU331.pdf
+public/sec2-ASU331.pdf
