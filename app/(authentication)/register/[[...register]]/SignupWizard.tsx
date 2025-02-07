@@ -2,7 +2,7 @@
 'use client';
 import { useState } from 'react';
 import Step1About from './(steps)/Step1About';
-import Step2Account from './(steps)/Step2Account';
+import Step2Account from './(steps)/Step2Verify';
 import Step3Address from './(steps)/Step3Address';
 
 export default function SignupWizard() {
