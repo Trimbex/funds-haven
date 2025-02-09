@@ -181,7 +181,7 @@ export default function Step1About({ next }: { next: () => void }) {
             )}
           </div>
 
-          {/* Password Field */}
+          {/* Password Field */} 
           <div className="block">
             <label
               htmlFor="password"
@@ -196,7 +196,7 @@ export default function Step1About({ next }: { next: () => void }) {
               value={formData.password}
               onChange={(e) => handleChange('password', e.target.value)}
               onFocus={() => handleFocus("password")}
-              onBlur={() => handleBlur("password")}
+              onBlur={() => handleBlur("password")} 
               className={`w-full px-4 py-3 rounded-lg border outline-none transition-shadow shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#009dff] dark:bg-gray-800 dark:text-white ${
                 focusedField === "password"
                   ? "border-[#009dff]"
