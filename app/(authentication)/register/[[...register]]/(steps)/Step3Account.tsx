@@ -153,9 +153,9 @@ export default function Step2Account({ next }: { next: () => void }) {
         </div>
 
         {/* Image Container */}
-        <div className="flex-shrink-0 h-full w-2/5 pt-24">
+        <div className="flex-shrink-0 h-full w-2/5 pt-20">
           <img
-            src="./regstep2.svg"
+            src="./regstep3.jpg"
             alt="Step 2 Image"
             className="w-full h-full object-cover rounded-lg"
           />
