@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
-
+import { useFormContext } from  "../../../../context/FormContext";
 export default function Step1About({ next }: { next: () => void }) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: ""
-  });
+  const { formData, setFormData } = useFormContext();
+  // const [formData, setFormData] = useState({
+  //   firstName: "",
+  //   lastName: "",
+  //   email: "",
+  //   password: "",
+  //   confirmPassword: ""
+  // });
   const [touched, setTouched] = useState({
     firstName: false,
     lastName: false,

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useFormContext } from  "../../../../context/FormContext";
 
 export default function Step2Verify({ next, back }: { next: () => void; back: () => void }) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);

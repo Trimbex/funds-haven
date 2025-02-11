@@ -1,6 +1,7 @@
 // app/register/page.tsx
 import SignupWizard from './SignupWizard';
 
+
 export default function RegisterPage() {
   return (
     // <div className="relative min-h-screen">

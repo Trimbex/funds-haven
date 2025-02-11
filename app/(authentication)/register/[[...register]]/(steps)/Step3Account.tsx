@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
+import { useFormContext } from  "../../../../context/FormContext";
 
-export default function Step2Account({ next }: { next: () => void }) {
+export default function Step3Account({ next,back }: { next: () => void, back: () => void }) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showDialog, setShowDialog] = useState(false);
-  const [formData, setFormData] = useState({
-    accountName: "",
-    accountType: "checking",
-    balance: "",
-    cardNumber: ""
-  });
-
+  const { formData, setFormData } = useFormContext();
   const handleFocus = (field: string) => setFocusedField(field);
   const handleBlur = () => setFocusedField(null);
 
@@ -163,7 +158,15 @@ export default function Step2Account({ next }: { next: () => void }) {
       </div>
 
       {/* Skip Button */}
-      <div className="mt-auto pt-6">
+      <div className="mt-auto pt-6 flex justify-between">
+      <button
+          type="button"
+          onClick={back}
+          className="w-40 px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+        >
+          Previous
+        </button>
+
         <button
           type="button"
           onClick={handleSkip}
