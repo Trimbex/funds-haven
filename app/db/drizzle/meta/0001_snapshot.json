@@ -1,6 +1,6 @@
 {
-  "id": "55b8c6d8-e721-4b08-8097-316782e76076",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "c1f0de36-996b-42d4-bee2-56def1e13bf3",
+  "prevId": "55b8c6d8-e721-4b08-8097-316782e76076",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -283,6 +283,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "email": {
+          "name": "email",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp",
@@ -300,7 +306,15 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
