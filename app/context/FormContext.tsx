@@ -10,6 +10,7 @@ interface FormData {
   accountType: string;
   balance: string;
   cardNumber: string;
+  OTP: string;
 }
 
 interface FormContextType {
@@ -29,7 +30,8 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
     accountName: "",
     accountType: "checking",
     balance: "",
-    cardNumber: ""
+    cardNumber: "",
+    OTP: ""
   });
 
   return (

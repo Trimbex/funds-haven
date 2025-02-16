@@ -1,11 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useFormContext } from  "../../../../context/FormContext";
+// import { verify } from "@/app/api/register/verification";
+import { sendOtp, verifyOtp } from '@/app/api/register/verification';
 
 export default function Step2Verify({ next, back }: { next: () => void; back: () => void }) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState('');
+  const { formData } = useFormContext();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Initialize refs array
   useEffect(() => {
@@ -53,27 +57,69 @@ export default function Step2Verify({ next, back }: { next: () => void; back: ()
     inputRefs.current[nextEmptyIndex]?.focus();
   };
 
-  const verifyOtp = async () => {
-    setIsVerifying(true);
-    setError('');
-
-    try {
-      // TODO: Implement OTP verification logic here
-      // const response = await verifyOtpWithBackend(otp.join(''));
-      // if (response.success) {
-      //   next();
-      // } else {
-      //   setError('Invalid verification code. Please try again.');
-      // }
-
-      // Temporary: Just proceed to next step
-      next();
-    } catch (err) {
-      setError('An error occurred during verification. Please try again.');
-    } finally {
-      setIsVerifying(false);
+  const handleSendOtp = async () => {
+    setIsLoading(true);
+    const response = await sendOtp(formData.email);
+    if (!response.success) {
+      setError(response.error || 'Failed to send OTP');
     }
+    
+    setIsLoading(false);
   };
+
+  const handleVerifyOtp = async () => {
+      setIsLoading(true);
+      
+      const response = await verifyOtp({ 
+        email: formData.email, 
+        token: otp.join('')
+      });
+      
+      if (!response.success) {
+        setError(response.error || 'Failed to verify OTP');
+      } 
+      else {
+        // Handle successful verification
+        // e.g., move to next step
+        next();
+      }
+      
+      setIsLoading(false);
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+  // const verifyOtpWithBackend = async () => {
+  // const verifyOtp = async () => {
+  //   setIsVerifying(true);
+  //   setError('');
+
+  //   try {
+  //     // TODO: Implement OTP verification logic here
+  //     // const response = await verifyOtpWithBackend(otp.join(''));
+  //     // if (response.success) {
+  //     //   next();
+  //     // } else {
+  //     //   setError('Invalid verification code. Please try again.');
+  //     // }
+
+  //     // Temporary: Just proceed to next step
+  //     next();
+  //   } catch (err) {
+  //     setError('An error occurred during verification. Please try again.');
+  //   } finally {
+  //     setIsVerifying(false);
+  //   }
+  // };
 
   const isOtpComplete = otp.every(digit => digit !== '');
 
@@ -138,7 +184,7 @@ export default function Step2Verify({ next, back }: { next: () => void; back: ()
           Previous
         </button>
         <button
-          type="button"
+          onClick={handleVerifyOtp}
           onClick={verifyOtp}
           disabled={!isOtpComplete || isVerifying}
           className={`w-40 px-6 py-3 text-white rounded-lg transition-all ${

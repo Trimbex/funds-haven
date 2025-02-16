@@ -4,8 +4,8 @@ import { useState } from 'react';
 import Step1About from './(steps)/Step1About';
 import Step2Account from './(steps)/Step2Verify';
 import Step3Account from './(steps)/Step3Account';
-
 import { FormProvider } from "../../../context/FormContext"
+
 
 export default function SignupWizard() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -21,6 +21,7 @@ export default function SignupWizard() {
       if (i >= steps.length - 1) return i;
       return i + 1;
     });
+
   }
 
   function back() {
