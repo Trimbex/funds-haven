@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useFormContext } from  "@/app/context/FormContext";
 import { useAuthContext } from "@/app/context/authContext"
 import { addAccount } from "@/app/api/accounts/account";
-import { redirect } from "next/navigation"
+import { useRouter } from "next/navigation";
+
 
 export default function Step3Account({ next,back }: { next: () => void, back: () => void }) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -15,21 +16,21 @@ export default function Step3Account({ next,back }: { next: () => void, back: ()
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
+  const router = useRouter();
   const handleSkip = () => {
     if (!formData.accountName.trim()) {
       setShowDialog(true);
     } 
     else {
       addAccount(authData.userID, formData.accountName, formData.accountType, formData.balance, formData.cardNumber, false);
-      redirect("/")
+      router.push("/");
       
     }
   };
 
   const handleConfirmSkip = () => {
     setShowDialog(false);
-    redirect("/")
+    router.push("/");
   };
 
   const handleCancelSkip = () => {

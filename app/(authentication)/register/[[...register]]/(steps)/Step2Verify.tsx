@@ -4,6 +4,7 @@ import { useAuthContext } from '@/app/context/authContext';
 import { sendOtp, verifyOtp , signUpNewUser} from '@/app/api/register/verification';
 import { addUser } from '@/app/api/register/user';
 
+
 export default function Step2Verify({ next, back }: { next: () => void; back: () => void }) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -99,6 +100,7 @@ export default function Step2Verify({ next, back }: { next: () => void; back: ()
       console.log(response?.user?.id);
       addUser(response?.user?.id, formData.firstName, formData.lastName, formData.email);
       setAuthData({userID: response?.user?.id});
+      
     }
    
     else

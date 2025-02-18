@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "../../../utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { useRouter } from "next/navigation";
-import { login } from "../../../server/auth/login";
+import { login } from "../../../api/login/login";
 
 export default function SignIn() {
   const router = useRouter();
