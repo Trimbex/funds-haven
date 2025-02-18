@@ -61,7 +61,24 @@ interface VerificationResponse {
  }
 
 
+ export async function signUpNewUser({email, password}: {email: string; password: string;}) {
+  const { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password,
+    // options: {
+    //   emailRedirectTo: 'https://example.com/welcome',
+    // },
+  })
 
+  try {
+    if (error) {
+      throw error
+    }
+    return data
+  } catch (error) { 
+}
+
+ }
 
 
 

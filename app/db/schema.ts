@@ -18,22 +18,23 @@ export const users = t.pgTable('users', {
 });
 
 export const accounts = t.pgTable('accounts', {
-  account_id: t.uuid('id').primaryKey().notNull(),
+  account_id: t.uuid('id').primaryKey().defaultRandom().notNull(),
   user_id: t.uuid('user_id').notNull().references(() => users.id),
   account_name: t.text('account_name'),
-  account_type: t.numeric('account_type'),
-  balance: t.text('balance'), // in USD
+  account_type: t.text('account_type'),
+  balance: t.numeric('balance', { precision: 10, scale: 2 }).default('0.00'), // Specify precision and scale
   cardno: t.text('cardno'),
   isVerified: t.boolean('isVerified').default(false),
   updated_at: timestamps.updated_at,
   created_at: timestamps.created_at,
 });
 
+// Similarly update the transactions table
 export const transactions = t.pgTable('transactions', {
   transaction_id: t.uuid('id').primaryKey().notNull(),
   account_id: t.uuid('account_id').notNull().references(() => accounts.account_id),
   transaction_type: t.text('transaction_type'),
-  amount: t.numeric('amount'),
+  amount: t.numeric('amount', { precision: 10, scale: 2 }), // Add precision and scale here too
   description: t.text('description'),
   date: t.timestamp('date'),
   created_at: timestamps.created_at,
