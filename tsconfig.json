@@ -34,7 +34,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "app/utils/supabase/client.ts"
-  ],
+, "app/api/register/email.js"  ],
   "exclude": [
     "node_modules"
   ]

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useFormContext } from  "../../../../context/FormContext";
-// import { verify } from "@/app/api/register/verification";
+import { useFormContext } from "../../../../context/FormContext";
 import { sendOtp, verifyOtp } from '@/app/api/register/verification';
 
 export default function Step2Verify({ next, back }: { next: () => void; back: () => void }) {
@@ -8,16 +7,19 @@ export default function Step2Verify({ next, back }: { next: () => void; back: ()
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const { formData } = useFormContext();
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
 
   // Initialize refs array
   useEffect(() => {
     inputRefs.current = inputRefs.current.slice(0, 6);
+    // Send OTP when component mounts
+    handleSendOtp();
   }, []);
 
   const handleChange = (index: number, value: string) => {
-    // Only allow numbers
     if (!/^\d*$/.test(value)) return;
 
     setOtp(currentOtp => {
@@ -26,14 +28,12 @@ export default function Step2Verify({ next, back }: { next: () => void; back: ()
       return newOtp;
     });
 
-    // Move to next input if value is entered
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Handle backspace
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -52,80 +52,49 @@ export default function Step2Verify({ next, back }: { next: () => void; back: ()
       return newOtp;
     });
 
-    // Focus the next empty input or the last input
     const nextEmptyIndex = digits.length < 6 ? digits.length : 5;
     inputRefs.current[nextEmptyIndex]?.focus();
   };
 
   const handleSendOtp = async () => {
     setIsLoading(true);
+    setError('');
+    setSuccessMessage('');
+    
     const response = await sendOtp(formData.email);
     if (!response.success) {
       setError(response.error || 'Failed to send OTP');
+    } else {
+      setSuccessMessage(`OTP has been sent to ${formData.email}`);
     }
     
     setIsLoading(false);
   };
 
   const handleVerifyOtp = async () => {
-      setIsLoading(true);
-      
-      const response = await verifyOtp({ 
-        email: formData.email, 
-        token: otp.join('')
-      });
-      
-      if (!response.success) {
-        setError(response.error || 'Failed to verify OTP');
-      } 
-      else {
-        // Handle successful verification
-        // e.g., move to next step
-        next();
-      }
-      
-      setIsLoading(false);
-    };
-
-
-
-
-
-
-
-
-
-
-
-
-  // const verifyOtpWithBackend = async () => {
-  // const verifyOtp = async () => {
-  //   setIsVerifying(true);
-  //   setError('');
-
-  //   try {
-  //     // TODO: Implement OTP verification logic here
-  //     // const response = await verifyOtpWithBackend(otp.join(''));
-  //     // if (response.success) {
-  //     //   next();
-  //     // } else {
-  //     //   setError('Invalid verification code. Please try again.');
-  //     // }
-
-  //     // Temporary: Just proceed to next step
-  //     next();
-  //   } catch (err) {
-  //     setError('An error occurred during verification. Please try again.');
-  //   } finally {
-  //     setIsVerifying(false);
-  //   }
-  // };
+    setIsLoading(true);
+    setError('');
+    
+    const response = await verifyOtp({ 
+      email: formData.email, 
+      token: otp.join('')
+    });
+    
+    if (!response.success) {
+      setError(response.error || 'Invalid OTP. Please try again.');
+      setIsVerified(false);
+    } else {
+      setSuccessMessage('OTP verified successfully!');
+      setIsVerified(true);
+    }
+    
+    setIsLoading(false);
+  };
 
   const isOtpComplete = otp.every(digit => digit !== '');
 
   return (
     <div className="flex flex-col p-16 pt-3 bg-white dark:bg-gray-950 rounded-lg shadow-lg w-full max-w-6xl mx-auto">
-      {/* Header Section */}
       <div className="row-span-1 text-center">
         <div className="font-normal dark:text-white text-3xl">Verify Your Email</div>
         <div className="font-normal text-slate-400 text-lg pt-3">
@@ -133,10 +102,8 @@ export default function Step2Verify({ next, back }: { next: () => void; back: ()
         </div>
       </div>
 
-      {/* OTP Input Section */}
       <div className="flex flex-row items-stretch gap-12 mt-6 min-h-[300px]">
         <div className="flex flex-col space-y-8 flex-grow">
-          {/* OTP Input Fields */}
           <div className="flex justify-center gap-4 mt-8">
             {otp.map((digit, index) => (
               <input
@@ -149,32 +116,35 @@ export default function Step2Verify({ next, back }: { next: () => void; back: ()
                 onKeyDown={e => handleKeyDown(index, e)}
                 onPaste={handlePaste}
                 className="w-14 h-14 text-center text-2xl border rounded-lg outline-none transition-shadow shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#009dff] dark:bg-gray-800 dark:text-white border-gray-300 dark:border-gray-600"
+                disabled={isVerified}
               />
             ))}
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="text-center text-red-500 mt-4">
               {error}
             </div>
           )}
 
-          {/* Resend Code Link */}
+          {successMessage && (
+            <div className="text-center text-green-500 mt-4">
+              {successMessage}
+            </div>
+          )}
+
           <div className="text-center mt-6">
             <button 
-              className="text-[#009dff] hover:underline font-medium"
-              onClick={() => {
-                // TODO: Implement resend logic
-              }}
+              className="text-[#009dff] hover:underline font-medium disabled:opacity-50"
+              onClick={handleSendOtp}
+              disabled={isLoading || isVerified}
             >
-              Didn't receive the code? Resend
+              {isLoading ? 'Sending...' : "Didn't receive the code? Resend"}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Navigation Buttons */}
       <div className="mt-auto pt-6 flex justify-between">
         <button
           type="button"
@@ -183,18 +153,26 @@ export default function Step2Verify({ next, back }: { next: () => void; back: ()
         >
           Previous
         </button>
-        <button
-          onClick={handleVerifyOtp}
-          onClick={verifyOtp}
-          disabled={!isOtpComplete || isVerifying}
-          className={`w-40 px-6 py-3 text-white rounded-lg transition-all ${
-            !isOtpComplete || isVerifying
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-gradient-to-tl from-[#007acc] to-[#009dff] hover:scale-105"
-          }`}
-        >
-          {isVerifying ? "Verifying..." : "Next"}
-        </button>
+        {isVerified ? (
+          <button
+            onClick={next}
+            className="w-40 px-6 py-3 text-white rounded-lg transition-all bg-gradient-to-tl from-[#007acc] to-[#009dff] hover:scale-105"
+          >
+            Next
+          </button>
+        ) : (
+          <button
+            onClick={handleVerifyOtp}
+            disabled={!isOtpComplete || isLoading}
+            className={`w-40 px-6 py-3 text-white rounded-lg transition-all ${
+              !isOtpComplete || isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-tl from-[#007acc] to-[#009dff] hover:scale-105"
+            }`}
+          >
+            {isLoading ? "Verifying..." : "Verify"}
+          </button>
+        )}
       </div>
     </div>
   );
