@@ -1,9 +1,9 @@
 CREATE TABLE "accounts" (
-	"id" uuid PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
 	"account_name" text,
-	"account_type" numeric,
-	"balance" text,
+	"account_type" text,
+	"balance" numeric(10, 2) DEFAULT '0.00',
 	"cardno" text,
 	"isVerified" boolean DEFAULT false,
 	"updated_at" timestamp,
@@ -27,7 +27,7 @@ CREATE TABLE "transactions" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"account_id" uuid NOT NULL,
 	"transaction_type" text,
-	"amount" numeric,
+	"amount" numeric(10, 2),
 	"description" text,
 	"date" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL
@@ -38,8 +38,10 @@ CREATE TABLE "users" (
 	"plaid_id" text,
 	"first_name" text,
 	"last_name" text,
+	"email" varchar NOT NULL,
 	"updated_at" timestamp,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

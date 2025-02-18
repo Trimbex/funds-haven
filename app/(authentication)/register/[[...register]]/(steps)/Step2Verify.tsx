@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useFormContext } from "../../../../context/FormContext";
-import { sendOtp, verifyOtp } from '@/app/api/register/verification';
+import { useAuthContext } from '@/app/context/authContext';
+import { sendOtp, verifyOtp , signUpNewUser} from '@/app/api/register/verification';
+import { addUser } from '@/app/api/register/user';
+
 
 export default function Step2Verify({ next, back }: { next: () => void; back: () => void }) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -9,6 +12,7 @@ export default function Step2Verify({ next, back }: { next: () => void; back: ()
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const { formData } = useFormContext();
+  const { authData, setAuthData } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
 
@@ -59,14 +63,14 @@ export default function Step2Verify({ next, back }: { next: () => void; back: ()
   const handleSendOtp = async () => {
     setIsLoading(true);
     setError('');
-    setSuccessMessage('');
+    setSuccessMessage('TESTING OTP!');
     
-    const response = await sendOtp(formData.email);
-    if (!response.success) {
-      setError(response.error || 'Failed to send OTP');
-    } else {
-      setSuccessMessage(`OTP has been sent to ${formData.email}`);
-    }
+    // const response = await sendOtp(formData.email);
+    // if (!response.success) {
+    //   setError(response.error || 'Failed to send OTP');
+    // } else {
+    //   setSuccessMessage(`OTP has been sent to ${formData.email}`);
+    // }
     
     setIsLoading(false);
   };
@@ -75,19 +79,33 @@ export default function Step2Verify({ next, back }: { next: () => void; back: ()
     setIsLoading(true);
     setError('');
     
-    const response = await verifyOtp({ 
-      email: formData.email, 
-      token: otp.join('')
-    });
+    // const response = await verifyOtp({ 
+    //   email: formData.email, 
+    //   token: otp.join('')
+    // });
     
-    if (!response.success) {
-      setError(response.error || 'Invalid OTP. Please try again.');
-      setIsVerified(false);
-    } else {
-      setSuccessMessage('OTP verified successfully!');
-      setIsVerified(true);
+    // if (!response.success) {
+    //   setError(response.error || 'Invalid OTP. Please try again.');
+    //   setIsVerified(false);
+    // } else {
+    //   setSuccessMessage('OTP verified successfully!');
+    //   setIsVerified(true);
+    // }
+    setIsVerified(true);
+
+    const response = await signUpNewUser({email: formData.email, password: formData.password});
+    
+    if(response?.user?.id)
+    {
+      console.log(response?.user?.id);
+      addUser(response?.user?.id, formData.firstName, formData.lastName, formData.email);
+      setAuthData({userID: response?.user?.id});
+      
     }
-    
+   
+    else
+    console.log("Error in adding user");
+ 
     setIsLoading(false);
   };
 

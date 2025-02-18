@@ -7,6 +7,8 @@ import { HiMenu } from 'react-icons/hi';
 import { Nav } from './nav';  
 import { WelcomeMessage } from './welcome';
 
+
+
 export const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -67,7 +69,7 @@ export const Header = () => {
                 </div>
             )}
         </header>
-        <WelcomeMessage />
+        
         </>
     );
 };

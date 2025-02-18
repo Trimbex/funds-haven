@@ -1,5 +1,5 @@
 {
-  "id": "55b8c6d8-e721-4b08-8097-316782e76076",
+  "id": "f977ed0b-5bb0-433e-a76d-1f2a0a97b25f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -12,7 +12,8 @@
           "name": "id",
           "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "user_id": {
           "name": "user_id",
@@ -28,15 +29,16 @@
         },
         "account_type": {
           "name": "account_type",
-          "type": "numeric",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
         "balance": {
           "name": "balance",
-          "type": "text",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "'0.00'"
         },
         "cardno": {
           "name": "cardno",
@@ -209,7 +211,7 @@
         },
         "amount": {
           "name": "amount",
-          "type": "numeric",
+          "type": "numeric(10, 2)",
           "primaryKey": false,
           "notNull": false
         },
@@ -283,6 +285,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "email": {
+          "name": "email",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp",
@@ -300,7 +308,15 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

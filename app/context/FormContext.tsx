@@ -11,6 +11,7 @@ interface FormData {
   balance: string;
   cardNumber: string;
   OTP: string;
+
 }
 
 interface FormContextType {

@@ -1,28 +1,36 @@
 import React, { useState } from 'react';
-import { useFormContext } from  "../../../../context/FormContext";
+import { useFormContext } from  "@/app/context/FormContext";
+import { useAuthContext } from "@/app/context/authContext"
+import { addAccount } from "@/app/api/accounts/account";
+import { useRouter } from "next/navigation";
+
 
 export default function Step3Account({ next,back }: { next: () => void, back: () => void }) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const { formData, setFormData } = useFormContext();
+  const { authData, setAuthData } = useAuthContext();
   const handleFocus = (field: string) => setFocusedField(field);
   const handleBlur = () => setFocusedField(null);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
+  const router = useRouter();
   const handleSkip = () => {
     if (!formData.accountName.trim()) {
       setShowDialog(true);
-    } else {
-      next();
+    } 
+    else {
+      addAccount(authData.userID, formData.accountName, formData.accountType, formData.balance, formData.cardNumber, false);
+      router.push("/");
+      
     }
   };
 
   const handleConfirmSkip = () => {
     setShowDialog(false);
-    next();
+    router.push("/");
   };
 
   const handleCancelSkip = () => {
@@ -159,7 +167,7 @@ export default function Step3Account({ next,back }: { next: () => void, back: ()
 
       {/* Skip Button */}
       <div className="mt-auto pt-6 flex justify-between">
-      <button
+        <button
           type="button"
           onClick={back}
           className="w-40 px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
@@ -172,7 +180,7 @@ export default function Step3Account({ next,back }: { next: () => void, back: ()
           onClick={handleSkip}
           className="w-40 px-6 py-3 text-white rounded-lg transition-all bg-gradient-to-tl from-[#007acc] to-[#009dff] hover:scale-105"
         >
-          Skip
+          {formData.accountName.trim() ? "Create Account" : "Skip"}
         </button>
       </div>
 

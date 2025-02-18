@@ -1,29 +1,52 @@
 import React, { useState, useEffect } from "react";
-import { useFormContext } from  "../../../../context/FormContext";
+import { useFormContext } from "../../../../context/FormContext";
+import { checkUniqueEmail } from "@/app/api/register/verification";
+
 export default function Step1About({ next }: { next: () => void }) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const { formData, setFormData } = useFormContext();
-  // const [formData, setFormData] = useState({
-  //   firstName: "",
-  //   lastName: "",
-  //   email: "",
-  //   password: "",
-  //   confirmPassword: ""
-  // });
+  const [uniqueEmail, setUniqueEmail] = useState<boolean>(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [touched, setTouched] = useState({
     firstName: false,
     lastName: false,
     email: false,
     password: false,
-    confirmPassword: false
+    confirmPassword: false,
   });
-  const [passwordStrength, setPasswordStrength] = useState<string>("Weak");
+
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false,
+    hasSpecialChar: false,
+    isLongEnough: false,
+  });
+
   const [passwordsMatch, setPasswordsMatch] = useState<boolean>(true);
 
   const handleFocus = (field: string) => setFocusedField(field);
-  const handleBlur = (field: string) => {
+
+  const handleBlur = async (field: string) => {
     setFocusedField(null);
-    setTouched(prev => ({ ...prev, [field]: true }));
+    setTouched((prev) => ({ ...prev, [field]: true }));
+
+    if (field === "email" && formData.email.trim() !== "") {
+      if (!isValidEmail(formData.email)) {
+        setEmailError("Please enter a valid email address");
+        setUniqueEmail(false);
+        return;
+      }
+
+      const { success, error } = await checkUniqueEmail(formData.email);
+      if (!success) {
+        setEmailError(error || "Email is already in use");
+        setUniqueEmail(false);
+      } else {
+        setEmailError(null);
+        setUniqueEmail(true);
+      }
+    }
   };
 
   useEffect(() => {
@@ -32,26 +55,26 @@ export default function Step1About({ next }: { next: () => void }) {
     }
   }, [formData.password, formData.confirmPassword, touched.confirmPassword]);
 
-  const evaluatePasswordStrength = (password: string) => {
+  const evaluatePasswordRequirements = (password: string) => {
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     const isLongEnough = password.length >= 8;
 
-    if (isLongEnough && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar) {
-      setPasswordStrength("Strong");
-    } else if (isLongEnough && (hasUpperCase || hasLowerCase) && hasNumber) {
-      setPasswordStrength("Medium");
-    } else {
-      setPasswordStrength("Weak");
-    }
+    setPasswordRequirements({
+      hasUpperCase,
+      hasLowerCase,
+      hasNumber,
+      hasSpecialChar,
+      isLongEnough,
+    });
   };
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (field === 'password') {
-      evaluatePasswordStrength(value);
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (field === "password") {
+      evaluatePasswordRequirements(value);
     }
   };
 
@@ -60,6 +83,13 @@ export default function Step1About({ next }: { next: () => void }) {
   };
 
   const isFormValid = () => {
+    const isPasswordValid =
+      passwordRequirements.hasUpperCase &&
+      passwordRequirements.hasLowerCase &&
+      passwordRequirements.hasNumber &&
+      passwordRequirements.hasSpecialChar &&
+      passwordRequirements.isLongEnough;
+
     return (
       formData.firstName.trim() !== "" &&
       formData.lastName.trim() !== "" &&
@@ -67,13 +97,13 @@ export default function Step1About({ next }: { next: () => void }) {
       isValidEmail(formData.email) &&
       formData.password !== "" &&
       formData.confirmPassword !== "" &&
-      formData.password === formData.confirmPassword
+      formData.password === formData.confirmPassword &&
+      isPasswordValid &&
+      uniqueEmail // Ensure email is unique
     );
   };
 
-  const RequiredAsterisk = () => (
-    <span className="text-red-500 ml-1">*</span>
-  );
+  const RequiredAsterisk = () => <span className="text-red-500 ml-1">*</span>;
 
   return (
     <div className="flex flex-col p-16 pt-3 bg-white dark:bg-gray-950 rounded-lg shadow-lg w-full max-w-6xl mx-auto">
@@ -102,7 +132,7 @@ export default function Step1About({ next }: { next: () => void }) {
               id="firstName"
               name="firstName"
               value={formData.firstName}
-              onChange={(e) => handleChange('firstName', e.target.value)}
+              onChange={(e) => handleChange("firstName", e.target.value)}
               onFocus={() => handleFocus("firstName")}
               onBlur={() => handleBlur("firstName")}
               className={`w-full px-4 py-3 rounded-lg border outline-none transition-shadow shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#009dff] dark:bg-gray-800 dark:text-white ${
@@ -132,7 +162,7 @@ export default function Step1About({ next }: { next: () => void }) {
               id="lastName"
               name="lastName"
               value={formData.lastName}
-              onChange={(e) => handleChange('lastName', e.target.value)}
+              onChange={(e) => handleChange("lastName", e.target.value)}
               onFocus={() => handleFocus("lastName")}
               onBlur={() => handleBlur("lastName")}
               className={`w-full px-4 py-3 rounded-lg border outline-none transition-shadow shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#009dff] dark:bg-gray-800 dark:text-white ${
@@ -157,32 +187,42 @@ export default function Step1About({ next }: { next: () => void }) {
             >
               Email Address<RequiredAsterisk />
             </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              onFocus={() => handleFocus("email")}
-              onBlur={() => handleBlur("email")}
-              className={`w-full px-4 py-3 rounded-lg border outline-none transition-shadow shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#009dff] dark:bg-gray-800 dark:text-white ${
-                focusedField === "email"
-                  ? "border-[#009dff]"
-                  : touched.email && (!formData.email || !isValidEmail(formData.email))
-                  ? "border-red-500"
-                  : "border-gray-300 dark:border-gray-600"
-              }`}
-              placeholder="Enter your email address"
-            />
+            <div className="relative">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                onFocus={() => handleFocus("email")}
+                onBlur={() => handleBlur("email")}
+                className={`w-full px-4 py-3 rounded-lg border outline-none transition-shadow shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#009dff] dark:bg-gray-800 dark:text-white ${
+                  focusedField === "email"
+                    ? "border-[#009dff]"
+                    : touched.email && (!formData.email || !isValidEmail(formData.email) || emailError)
+                    ? "border-red-500"
+                    : "border-gray-300 dark:border-gray-600"
+                }`}
+                placeholder="Enter your email address"
+              />
+              {uniqueEmail && !emailError && (
+                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500">
+                  ✔
+                </span>
+              )}
+            </div>
             {touched.email && !formData.email && (
               <div className="mt-2 text-sm text-red-500">Email is required</div>
             )}
             {touched.email && formData.email && !isValidEmail(formData.email) && (
               <div className="mt-2 text-sm text-red-500">Please enter a valid email address</div>
             )}
+            {emailError && (
+              <div className="mt-2 text-sm text-red-500">{emailError}</div>
+            )}
           </div>
 
-          {/* Password Field */} 
+          {/* Password Field */}
           <div className="block">
             <label
               htmlFor="password"
@@ -195,9 +235,9 @@ export default function Step1About({ next }: { next: () => void }) {
               id="password"
               name="password"
               value={formData.password}
-              onChange={(e) => handleChange('password', e.target.value)}
+              onChange={(e) => handleChange("password", e.target.value)}
               onFocus={() => handleFocus("password")}
-              onBlur={() => handleBlur("password")} 
+              onBlur={() => handleBlur("password")}
               className={`w-full px-4 py-3 rounded-lg border outline-none transition-shadow shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#009dff] dark:bg-gray-800 dark:text-white ${
                 focusedField === "password"
                   ? "border-[#009dff]"
@@ -208,13 +248,24 @@ export default function Step1About({ next }: { next: () => void }) {
               placeholder="Enter your password"
             />
             <div className="mt-2 text-sm font-medium">
-              Password Strength: <span className={`font-bold ${
-                passwordStrength === "Strong"
-                  ? "text-green-600"
-                  : passwordStrength === "Medium"
-                  ? "text-yellow-600"
-                  : "text-red-600"
-              }`}>{passwordStrength}</span>
+              Password Requirements:
+              <ul className="list-disc list-inside">
+                <li className={passwordRequirements.hasUpperCase ? "text-green-600" : "text-red-600"}>
+                  At least one uppercase letter
+                </li>
+                <li className={passwordRequirements.hasLowerCase ? "text-green-600" : "text-red-600"}>
+                  At least one lowercase letter
+                </li>
+                <li className={passwordRequirements.hasNumber ? "text-green-600" : "text-red-600"}>
+                  At least one number
+                </li>
+                <li className={passwordRequirements.hasSpecialChar ? "text-green-600" : "text-red-600"}>
+                  At least one special character
+                </li>
+                <li className={passwordRequirements.isLongEnough ? "text-green-600" : "text-red-600"}>
+                  At least 8 characters long
+                </li>
+              </ul>
             </div>
             {touched.password && !formData.password && (
               <div className="mt-2 text-sm text-red-500">Password is required</div>
@@ -234,7 +285,7 @@ export default function Step1About({ next }: { next: () => void }) {
               id="confirmPassword"
               name="confirmPassword"
               value={formData.confirmPassword}
-              onChange={(e) => handleChange('confirmPassword', e.target.value)}
+              onChange={(e) => handleChange("confirmPassword", e.target.value)}
               onFocus={() => handleFocus("confirmPassword")}
               onBlur={() => handleBlur("confirmPassword")}
               className={`w-full px-4 py-3 rounded-lg border outline-none transition-shadow shadow-sm focus:shadow-md focus:ring-2 focus:ring-[#009dff] dark:bg-gray-800 dark:text-white ${

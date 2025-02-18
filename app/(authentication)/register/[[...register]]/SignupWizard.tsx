@@ -5,6 +5,7 @@ import Step1About from './(steps)/Step1About';
 import Step2Account from './(steps)/Step2Verify';
 import Step3Account from './(steps)/Step3Account';
 import { FormProvider } from "../../../context/FormContext"
+import { AuthProvider } from '@/app/context/authContext';
 
 
 export default function SignupWizard() {
@@ -35,10 +36,12 @@ export default function SignupWizard() {
   const isLastStep = currentStepIndex === steps.length - 1;
 
   return (
-    <FormProvider>
-    <div className="mx-auto mt-12">
-      {steps[currentStepIndex]}
-    </div>
-    </FormProvider>
+    <AuthProvider>
+        <FormProvider>
+        <div className="mx-auto mt-12">
+          {steps[currentStepIndex]}
+        </div>
+        </FormProvider>
+    </AuthProvider>
   );
 }

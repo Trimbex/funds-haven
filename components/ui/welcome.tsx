@@ -30,7 +30,7 @@ export const WelcomeMessage = () => {
   const user = { firstName: "Saif" };
   const isLoaded = true; // Simulating that the user data is loaded
 
-  const welcomeText = `Welcome, ${user?.firstName || 'Guest'}`;
+  const welcomeText = `W elcome, ${user?.firstName || 'Guest'}`;
   const { displayText, isComplete } = useTypewriter(isLoaded ? welcomeText : '');
 
   // Split the text to apply different styles to firstName
