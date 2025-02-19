@@ -13,7 +13,7 @@ const DashboardLayout = ({ children }: Props) =>{
         <>
         <Header />
         
-        <main className="px-3 lg:px-14">
+        <main className="">
             {children}
         </main>
         </>
