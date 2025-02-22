@@ -1,34 +1,30 @@
-import { useState } from "react";
-import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+"use client"
 
-type CheckboxProps = {
-  label: string;
-  checked?: boolean;
-  onChange?: (checked: boolean) => void;
-};
+import * as React from "react"
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
+import { Check } from "lucide-react"
 
-export default function Checkbox({ label, checked = false, onChange }: CheckboxProps) {
-  const [isChecked, setIsChecked] = useState(checked);
+import { cn } from "@/lib/utils"
 
-  const handleChange = () => {
-    const newChecked = !isChecked;
-    setIsChecked(newChecked);
-    onChange?.(newChecked);
-  };
+const Checkbox = React.forwardRef<
+  React.ElementRef<typeof CheckboxPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
+>(({ className, ...props }, ref) => (
+  <CheckboxPrimitive.Root
+    ref={ref}
+    className={cn(
+      "peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
+      className
+    )}
+    {...props}
+  >
+    <CheckboxPrimitive.Indicator
+      className={cn("flex items-center justify-center text-current")}
+    >
+      <Check className="h-4 w-4" />
+    </CheckboxPrimitive.Indicator>
+  </CheckboxPrimitive.Root>
+))
+Checkbox.displayName = CheckboxPrimitive.Root.displayName
 
-  return (
-    <label className="flex items-center space-x-2 cursor-pointer">
-      <div
-        className={cn(
-          "h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          isChecked ? "bg-primary text-primary-foreground" : "bg-white"
-        )}
-        onClick={handleChange}
-      >
-        {isChecked && <Check className="h-4 w-4 text-current" />}
-      </div>
-      <span className="text-gray-700">{label}</span>
-    </label>
-  );
-}
+export { Checkbox }

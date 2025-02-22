@@ -1,13 +1,14 @@
 'use client'
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, CreditCard, Wallet, Building, CheckCircle2, XCircle } from "lucide-react";
 import { Payment, columns } from './columns';
 import AddAccount from './add-account'; 
 import {DataTable} from "@/components/ui/data-table";
+import  BankCard  from "./bank-card"
 
 const accounts = [
   {
@@ -83,8 +84,30 @@ export default function Accounts() {
         </div>
       </div>
 
+
+
+
+
+
+        <BankCard></BankCard>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       {/* Accounts List Section */}
-      <div className="max-w-screen-2xl mx-auto w-full pb-10 -mt-24">
+      {/* <div className="max-w-screen-2xl mx-auto w-full pb-10 -mt-24">
         <Card className="border-none drop-shadow-sm">
           <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
             <CardTitle className="text-xl line-clamp-1">Accounts List</CardTitle>
@@ -97,7 +120,8 @@ export default function Accounts() {
             <DataTable filterKey={'email'} columns={columns} data={data}></DataTable>
             </CardContent>
         </Card>
-      </div>
+      </div> */}
+      
 
       {/* Add Account Dialog */}
       <AddAccount

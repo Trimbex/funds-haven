@@ -28,6 +28,7 @@ yarn-error.log*
 # local env files
 .env*.local
 
+
 # vercel
 .vercel
 
@@ -37,3 +38,6 @@ next-env.d.ts
 public/ASU331.pdf
 public/sec1-ASU331.pdf
 public/sec2-ASU331.pdf
+.env
+.env
+.env
