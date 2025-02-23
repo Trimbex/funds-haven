@@ -5,9 +5,20 @@ import { Badge } from '@/components/ui/badge';
 import { CreditCard, Building2, Pencil, CircleCheck, CircleX , Info} from 'lucide-react';
 import { Mastercard, Visa, Paypal } from 'react-payment-logos/dist/flat';
 
-const BankCard = () => {
 
-    const [showMore, setShowMore] = React.useState<boolean>(false);
+
+
+interface BankCardProps {
+    accountName: string;
+    accountType: string;
+    balance: number;
+    cardno: string;
+    created_at?: string;
+    verified: boolean;
+}
+const BankCard = ({accountName,accountType,balance,cardno,verified,created_at}:BankCardProps) => {
+
+    const [showMore, setShowMore] = React.useState<boolean>(verified);
     const [Verified, setVerified] = React.useState<boolean>(false);
   return (
     <div className="mt-10 max-w-md">
@@ -18,7 +29,7 @@ const BankCard = () => {
         
         <CardHeader className="relative z-10">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-500">Checking Account</span>
+            <span className="text-sm font-medium text-gray-500">{accountName}</span>
         <Badge variant="default" className={`${Verified ? "bg-green-400" : "bg-red-600"} text-sm`}>
                         {Verified ? (
                             <>
@@ -31,21 +42,21 @@ const BankCard = () => {
                         )}
                         </Badge>
           </div>
-          <h3 className="text-xl font-bold tracking-tight">Primary Checking</h3>
+          <h3 className="text-xl font-bold tracking-tight">{accountType}</h3>
         </CardHeader>
 
         <CardContent className="relative z-10">
           <div className="space-y-4">
             <div>
               <p className="text-3xl font-bold">
-                $5,420.50
+                ${balance}
               </p>
               <p className="text-sm text-gray-500">Available Balance</p>
             </div>
             
             <div className="flex items-center space-x-2 text-gray-600">
               <CreditCard className="w-4 h-4" />
-              <span className="text-sm font-medium">**** **** **** 1234</span>
+              <span className="text-sm font-medium">**** **** **** {cardno}</span>
             </div>
             
           </div>
@@ -57,7 +68,7 @@ const BankCard = () => {
             Number of Transactions: 5
             </div>
             <div>
-            Created At: 12/12/2021
+            Created At: {created_at}
             </div>
 
 

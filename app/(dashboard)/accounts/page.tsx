@@ -1,14 +1,18 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, CreditCard, Wallet, Building, CheckCircle2, XCircle } from "lucide-react";
+import { PlusCircle, CreditCard, Wallet, Building, CheckCircle2, XCircle, Plus } from "lucide-react";
 import { Payment, columns } from './columns';
 import AddAccount from './add-account'; 
 import {DataTable} from "@/components/ui/data-table";
 import  BankCard  from "./bank-card"
+import { getCurrentUserID } from '@/app/api/general';
+import { getAccounts } from '@/app/api/accounts/account';
+import { supabase } from '@/app/utils/supabase/client'
+
 
 const accounts = [
   {
@@ -55,21 +59,63 @@ const data: Payment[] = [
   }
 ]
 
+
+
 export default function Accounts() {
-  const [showDialog, setShowDialog] = useState(false);
+  
+  const [user, setUser] = useState<string>();
+  const [accounts, setAccounts] = useState<any[]>([]);
 
-  const handleAddAccount = (account: {
-    accountName: string;
-    accountType: string;
-    balance: string;
-    cardNumber: string;
-  }) => {
-    console.log("New Account:", account);
-    // Add logic to handle the new account data (e.g., add to state or API call)
-  };
 
+
+  useEffect(() => {
+    const getUser = async () => {
+      const response = await getCurrentUserID(); 
+      setUser(response.userId!);
+      
+      // console.log("Session Data:", response.userId);
+    };
+
+    getUser();
+  },[]);
+
+
+
+
+  useEffect(() => {
+    const fetchAccounts = async (userId: string) => {
+      try {
+        const data = await getAccounts(userId); 
+        setAccounts(data);
+      } catch (error) {
+        console.error("Error fetching accounts:", error);
+      }
+    };
+
+    if (user) {
+      fetchAccounts(user);
+    }
+  }, [user]);
+
+
+ 
+  
+
+
+  // const [showDialog, setShowDialog] = useState(false);
+
+  // const handleAddAccount = (account: {
+  //   accountName: string;
+  //   accountType: string;
+  //   balance: string;
+  //   cardNumber: string;
+  // }) => {
+  //   console.log("New Account:", account);
+  //   // Add logic to handle the new account data (e.g., add to state or API call)
+  // };
   return (
     <>
+        {/* <pre>{JSON.stringify(accounts, null, 2)}</pre> */}
       {/* Header Section */}
       <div className="w-full bg-[#009dff] py-48 px-6 md:px-12 lg:px-24">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
@@ -85,11 +131,39 @@ export default function Accounts() {
       </div>
 
 
+      
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ml-16 md:ml-24 lg:ml-48">
+   
+      {
+        accounts.map((account) => (
+          <BankCard 
+            key={account.account_id}
+            accountName={account.account_name} 
+            accountType={account.account_type} 
+            balance={Number(account.balance)} 
+            cardno={account.cardno} 
+            verified={account.isVerified} 
+            created_at={account.created_at ? account.created_at.toLocaleDateString() : ""} 
+          />
+        ))
+
+        
+      }
+           
+      <div className="mt-10 max-w-md">
+              <Button
+            variant="outline"
+            className="w-full h-full flex flex-col border-4 border-dotted border-gray-500"
+          >
+            <span className="text-8xl font-mono text-gray-600">+</span>
+          </Button>
+      </div>
+      </div>
+      
+      
 
 
-
-
-        <BankCard></BankCard>
 
 
 
@@ -124,11 +198,14 @@ export default function Accounts() {
       
 
       {/* Add Account Dialog */}
-      <AddAccount
+
+
+
+      {/* <AddAccount
         isOpen={showDialog}
         onClose={() => setShowDialog(false)}
         onAddAccount={handleAddAccount}
-      />
+      /> */}
 
 
     </>
