@@ -25,7 +25,9 @@ const EditAccountDialog = ({ accountID, accountName, accountType, balance, cardn
   const [editedBalance, setEditedBalance] = React.useState<string>(balance);
   const [editedCardNo, setEditedCardNo] = React.useState(cardno);
 
-  const handleSave = async () => {
+
+  const handleSave = async () => 
+  {
     onSave({
       accountName: editedAccountName,
       accountType: editedAccountType,
@@ -33,40 +35,92 @@ const EditAccountDialog = ({ accountID, accountName, accountType, balance, cardn
       cardno: editedCardNo,
     });
 
-    try {
-      const response = await editAccount(accountID, editedAccountName, editedAccountType, editedBalance, editedCardNo);
-      if (response?.success) {
-        toast.success("Account successfully modified") // Use sonner's toast
+    try
+    {
+        if(!accountID)
+        {
+          toast.error("Account ID is required");
+          return;
+        }
 
-        // Wait 2 seconds before refreshing the page
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
-      }
-    } catch {
-      toast.error("Failed to update the account."); // Use sonner's toast
-    } finally {
-      setIsOpen(false);
+        const response = await fetch('/api/accounts',
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              account_id: accountID,
+              account_name: editedAccountName,
+              account_type: editedAccountType,
+              balance: editedBalance,
+              cardno: editedCardNo
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if(data.success)
+        {
+          toast.success("Account successfully modified");
+          setTimeout(() => { window.location.reload(); }, 2000);
+        }
+        else
+        {
+          toast.error("Failed to update the account.");
+        }
+
     }
-  };
+    catch(error)
+    {
+        toast.error("Failed to update the account.");
+    }
+
+  }
+
+  // const handleSave = async () => {
+  //   onSave({
+  //     accountName: editedAccountName,
+  //     accountType: editedAccountType,
+  //     balance: editedBalance,
+  //     cardno: editedCardNo,
+  //   });
+
+  //   try {
+  //     const response = await editAccount(accountID, editedAccountName, editedAccountType, editedBalance, editedCardNo);
+  //     if (response?.success) {
+  //       toast.success("Account successfully modified") // Use sonner's toast
+
+  //       // Wait 2 seconds before refreshing the page
+  //       setTimeout(() => {
+  //         window.location.reload();
+  //       }, 2000);
+  //     }
+  //   } catch {
+  //     toast.error("Failed to update the account."); // Use sonner's toast
+  //   } finally {
+  //     setIsOpen(false);
+  //   }
+  // };
 
 
-  const handleDelete = async () => {
-    try {
-        const response = await deleteAccount(accountID);
-        if (response?.success) {
-            toast.success("Account successfully deleted") 
+  // const handleDelete = async () => {
+  //   try {
+  //       const response = await deleteAccount(accountID);
+  //       if (response?.success) {
+  //           toast.success("Account successfully deleted") 
     
             
-            setTimeout(() => {
-            window.location.reload();
-            }, 2000);
-        }
-        } catch {
-            toast.error("Failed to delete the account."); 
-        }
-    setIsOpen(false);
-    }
+  //           setTimeout(() => {
+  //           window.location.reload();
+  //           }, 2000);
+  //       }
+  //       } catch {
+  //           toast.error("Failed to delete the account."); 
+  //       }
+  //   setIsOpen(false);
+  //   }
 
 
   return (
@@ -101,7 +155,7 @@ const EditAccountDialog = ({ accountID, accountName, accountType, balance, cardn
         </div>
 
         <div className="flex justify-between">
-          <Button variant="destructive" onClick={handleDelete}>
+          <Button variant="destructive" >
             <Trash2 /> Delete Account
           </Button>
           <div>
