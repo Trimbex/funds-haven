@@ -1,33 +1,73 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { CreditCard, Pencil, Trash2 } from 'lucide-react';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Pencil } from 'lucide-react';
+import { editAccount, deleteAccount } from '@/app/api/accounts/account';
+import { toast } from "sonner"
 
+// EditAccountDialog Component
 interface EditAccountDialogProps {
   accountID: string;
   accountName: string;
   accountType: string;
-  balance: number;
-  onSave: (updatedAccount: { accountName: string; accountType: string; balance: number }) => void;
+  balance: string;
+  cardno: string;
+  onSave: (updatedAccount: { accountName: string; accountType: string; balance: string; cardno: string }) => void;
 }
 
-const EditAccountDialog = ({ accountID, accountName, accountType, balance, onSave }: EditAccountDialogProps) => {
+const EditAccountDialog = ({ accountID, accountName, accountType, balance, cardno, onSave }: EditAccountDialogProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [editedAccountName, setEditedAccountName] = React.useState(accountName);
   const [editedAccountType, setEditedAccountType] = React.useState(accountType);
-  const [editedBalance, setEditedBalance] = React.useState(balance);
+  const [editedBalance, setEditedBalance] = React.useState<string>(balance);
+  const [editedCardNo, setEditedCardNo] = React.useState(cardno);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     onSave({
       accountName: editedAccountName,
       accountType: editedAccountType,
       balance: editedBalance,
+      cardno: editedCardNo,
     });
-    setIsOpen(false);
+
+    try {
+      const response = await editAccount(accountID, editedAccountName, editedAccountType, editedBalance, editedCardNo);
+      if (response?.success) {
+        toast.success("Account successfully modified") // Use sonner's toast
+
+        // Wait 2 seconds before refreshing the page
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+    } catch {
+      toast.error("Failed to update the account."); // Use sonner's toast
+    } finally {
+      setIsOpen(false);
+    }
   };
+
+
+  const handleDelete = async () => {
+    try {
+        const response = await deleteAccount(accountID);
+        if (response?.success) {
+            toast.success("Account successfully deleted") 
+    
+            
+            setTimeout(() => {
+            window.location.reload();
+            }, 2000);
+        }
+        } catch {
+            toast.error("Failed to delete the account."); 
+        }
+    setIsOpen(false);
+    }
+
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -44,36 +84,35 @@ const EditAccountDialog = ({ accountID, accountName, accountType, balance, onSav
         <div className="space-y-4">
           <div>
             <Label htmlFor="accountName">Account Name</Label>
-            <Input
-              id="accountName"
-              value={editedAccountName}
-              onChange={(e) => setEditedAccountName(e.target.value)}
-            />
+            <Input id="accountName" value={editedAccountName} onChange={(e) => setEditedAccountName(e.target.value)} />
           </div>
           <div>
             <Label htmlFor="accountType">Account Type</Label>
-            <Input
-              id="accountType"
-              value={editedAccountType}
-              onChange={(e) => setEditedAccountType(e.target.value)}
-            />
+            <Input id="accountType" value={editedAccountType} onChange={(e) => setEditedAccountType(e.target.value)} />
           </div>
           <div>
             <Label htmlFor="balance">Balance</Label>
-            <Input
-              id="balance"
-              type="number"
-              value={editedBalance}
-              onChange={(e) => setEditedBalance(Number(e.target.value))}
-            />
+            <Input id="balance" type="number" value={editedBalance} onChange={(e) => setEditedBalance(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="cardno">Card Number</Label>
+            <Input id="cardno" value={editedCardNo} onChange={(e) => setEditedCardNo(e.target.value)} placeholder="Last 4 digits" />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancel
+
+        <div className="flex justify-between">
+          <Button variant="destructive" onClick={handleDelete}>
+            <Trash2 /> Delete Account
           </Button>
-          <Button onClick={handleSave}>Save</Button>
-        </DialogFooter>
+          <div>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="ml-6">
+              Save
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

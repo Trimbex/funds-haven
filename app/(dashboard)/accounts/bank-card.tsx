@@ -5,6 +5,7 @@ import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, Building2, Pencil, CircleCheck, CircleX, Trash2 } from 'lucide-react';
 import { Visa } from 'react-payment-logos/dist/flat';
+import  EditAccountDialog  from './edit-account';
 import {
   Dialog,
   DialogTrigger,
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { editAccount,deleteAccount } from '@/app/api/accounts/account';
 
 interface BankCardProps {
   accountID: string;
@@ -42,7 +44,7 @@ const BankCard = ({ accountID, accountName, accountType, balance, cardno, verifi
   };
 
   // Handle saving edited account details
-  const handleSave = (updatedAccount: { accountName: string; accountType: string; balance: number }) => {
+  const handleSave = (updatedAccount: { accountName: string; accountType: string; balance: number; cardno: string }) => {
     console.log('Updated Account:', updatedAccount);
     // You can update state or make an API call here
   };
@@ -112,6 +114,7 @@ const BankCard = ({ accountID, accountName, accountType, balance, cardno, verifi
                 accountName={accountName}
                 accountType={accountType}
                 balance={balance}
+                cardno={cardno}
                 onSave={handleSave}
               />
             </CardContent>
@@ -130,83 +133,6 @@ const BankCard = ({ accountID, accountName, accountType, balance, cardno, verifi
   );
 };
 
-// EditAccountDialog Component
-interface EditAccountDialogProps {
-  accountID: string;
-  accountName: string;
-  accountType: string;
-  balance: number;
-  onSave: (updatedAccount: { accountName: string; accountType: string; balance: number }) => void;
-}
 
-const EditAccountDialog = ({ accountID, accountName, accountType, balance, onSave }: EditAccountDialogProps) => {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [editedAccountName, setEditedAccountName] = React.useState(accountName);
-  const [editedAccountType, setEditedAccountType] = React.useState(accountType);
-  const [editedBalance, setEditedBalance] = React.useState(balance);
-
-  const handleSave = () => {
-    onSave({
-      accountName: editedAccountName,
-      accountType: editedAccountType,
-      balance: editedBalance,
-    });
-    setIsOpen(false);
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="secondary">
-          <Pencil className="mr-1" /> Edit Account
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Account</DialogTitle>
-          <DialogDescription>Make changes to your account here. Click save when you're done.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="accountName">Account Name</Label>
-            <Input
-              id="accountName"
-              value={editedAccountName}
-              onChange={(e) => setEditedAccountName(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="accountType">Account Type</Label>
-            <Input
-              id="accountType"
-              value={editedAccountType}
-              onChange={(e) => setEditedAccountType(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="balance">Balance</Label>
-            <Input
-              id="balance"
-              type="number"
-              value={editedBalance}
-              onChange={(e) => setEditedBalance(Number(e.target.value))}
-            />
-          </div>
-        </div>
-        
-          <div className='flex justify-between'>
-          <Button variant="destructive"  onClick={handleSave}> <Trash2></Trash2>Delete Account</Button>
-          <div >
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} className='ml-6'>Save</Button>
-          </div>
-          </div>
-        
-      </DialogContent>
-    </Dialog>
-  );
-};
 
 export default BankCard;

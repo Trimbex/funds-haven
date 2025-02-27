@@ -17,7 +17,7 @@ export async function addAccount(user_id: string, account_name: string, account_
         user_id,
         account_name,
         account_type,
-        balance,
+        balance: balance.toString(),
         cardno,
         isVerified,
       });
@@ -29,7 +29,7 @@ export async function addAccount(user_id: string, account_name: string, account_
     }
   }
 
-export async function editAccount(account_id: string, account_name: string, account_type: string, balance: string, cardno: string, isVerified: boolean) {
+export async function editAccount(account_id: string, account_name: string, account_type: string, balance: string, cardno: string, isVerified?: boolean) {
     try {
         const result = await db.update(t.accounts).set({
             account_name,
