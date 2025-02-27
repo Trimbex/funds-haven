@@ -5,7 +5,7 @@ import { CreditCard, Pencil, Trash2 } from 'lucide-react';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { editAccount, deleteAccount } from '@/app/api/accounts/account';
+import { getCurrentUserID } from '@/app/api/general';
 import { toast } from "sonner"
 
 // EditAccountDialog Component

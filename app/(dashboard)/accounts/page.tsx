@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { getCurrentUserID } from '@/app/api/general';
-import { getAccounts, addAccount } from '@/app/api/accounts/account';
 import BankCard from "./bank-card";
 import AddAccount from './add-account'; 
 import DotLoader from "@/components/loader/loader";
@@ -34,8 +33,13 @@ export default function Accounts() {
     
     const fetchAccounts = async () => {
       try {
-        const data = await getAccounts(user);
-        setAccounts(data);
+        const response = await fetch(`/api/accounts?user_id=${user}`);
+        const data = await response.json();
+        if (data.success) {
+          setAccounts(data.accounts);
+        } else {
+          console.error(data.message);
+        }
       } catch (error) {
         console.error("Error fetching accounts:", error);
       } finally {
@@ -57,13 +61,33 @@ export default function Accounts() {
     try {
       if (!user) return alert("User not found");
 
-      const response = await addAccount(user, newAccount.accountName, newAccount.accountType, newAccount.balance, newAccount.cardNumber, false);
-      if(response.success) {
-        const updatedAccounts = await getAccounts(user);
-        setAccounts(updatedAccounts);
+      const response = await fetch('/api/accounts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: user,
+          account_name: newAccount.accountName,
+          account_type: newAccount.accountType,
+          balance: newAccount.balance,
+          cardno: newAccount.cardNumber,
+          isVerified: false,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        const updatedAccountsResponse = await fetch(`/api/accounts?user_id=${user}`);
+        const updatedAccountsData = await updatedAccountsResponse.json();
+        if (updatedAccountsData.success) {
+          setAccounts(updatedAccountsData.accounts);
+        }
         setDialogLoading(false);
-        setShowDialog(false); 
-        window.location.reload();
+        setShowDialog(false);
+      } else {
+        alert("Failed to add account. Please try again.");
+        setDialogLoading(false);
       }
     } catch (error) {
       console.error("Error adding account:", error);
@@ -122,7 +146,6 @@ export default function Accounts() {
             ))}
 
             {/* Add Account Button */}
-           
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -131,14 +154,18 @@ export default function Accounts() {
             >
               <Button
                 variant="outline"
-                className="w-full h-full flex flex-col border-4 border-dotted border-gray-500 "
+                className="w-full h-full flex flex-col border-4 border-dotted border-gray-500"
                 onClick={() => setShowDialog(true)}
+                disabled={dialogLoading}
               >
-                <span className="text-8xl font-mono text-gray-600">+</span>
+                {dialogLoading ? (
+                  <span className="text-8xl font-mono text-gray-600">...</span>
+                ) : (
+                  <span className="text-8xl font-mono text-gray-600">+</span>
+                )}
               </Button>
             </motion.div>
-            </div>
-         
+          </div>
 
           {/* Add Account Modal */}
           <AddAccount
