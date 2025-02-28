@@ -64,7 +64,7 @@ const EditAccountDialog = ({ accountID, accountName, accountType, balance, cardn
         if(data.success)
         {
           toast.success("Account successfully modified");
-          setTimeout(() => { window.location.reload(); }, 2000);
+          //setTimeout(() => { window.location.reload(); }, 2000);
         }
         else
         {
@@ -76,6 +76,41 @@ const EditAccountDialog = ({ accountID, accountName, accountType, balance, cardn
     {
         toast.error("Failed to update the account.");
     }
+
+  }
+
+  const handleDelete = async () =>
+  {
+    if(!accountID)
+      {
+        toast.error("Account ID is required");
+        return;
+      }
+
+     const response = await fetch('/api/accounts',
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          account_id: accountID
+        })
+      }
+
+     )
+
+      const data = await response.json();
+
+      if(data.success)
+      {
+        toast.success("Account successfully deleted");
+        //setTimeout(() => { window.location.reload(); }, 2000);
+      }
+      else
+      {
+        toast.error("Failed to delete the account.");
+      }
 
   }
 
@@ -155,7 +190,7 @@ const EditAccountDialog = ({ accountID, accountName, accountType, balance, cardn
         </div>
 
         <div className="flex justify-between">
-          <Button variant="destructive" >
+          <Button variant="destructive" onClick={() => handleDelete()}>
             <Trash2 /> Delete Account
           </Button>
           <div>
