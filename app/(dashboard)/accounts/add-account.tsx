@@ -2,39 +2,41 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Loader } from "lucide-react";
 import { motion } from "framer-motion";
+import CardDropdown from '@/components/ui/payment-dropbox';
+import { useAccounts } from '@/app/context/accountContext';
 
-interface AddAccountProps {
-  isOpen: boolean;
-  onClose: () => void;
-  loading: boolean;
-  onAddAccount: (account: {
-    accountName: string;
-    accountType: string;
-    balance: string;
-    cardNumber: string;
-  }) => void;
-}
-
-export default function AddAccount({ isOpen, onClose, onAddAccount, loading }: AddAccountProps) {
+export default function AddAccount() {
+  const { showDialog, setShowDialog, addAccount, dialogLoading } = useAccounts();
+  
   const [accountName, setAccountName] = useState("");
   const [accountType, setAccountType] = useState("checking");
   const [balance, setBalance] = useState("");
   const [cardNumber, setCardNumber] = useState("");
+  const [cardCompany, setCardCompany] = useState("Other");
 
   const handleAddAccount = () => {
     if (!accountName.trim()) {
       alert("Account name is required!");
       return;
     }
-    onAddAccount({ accountName, accountType, balance, cardNumber });
+    
+    addAccount({ 
+      accountName, 
+      accountType, 
+      balance, 
+      cardNumber,
+      cardCompany 
+    });
+    
+    // Reset form
     setAccountName("");
     setAccountType("checking");
     setBalance("");
     setCardNumber("");
-    onClose();
+    setCardCompany("Other");
   };
 
-  if (!isOpen) return null;
+  if (!showDialog) return null;
 
   return (
     <motion.div 
@@ -125,12 +127,23 @@ export default function AddAccount({ isOpen, onClose, onAddAccount, loading }: A
                 maxLength={4}
               />
             </div>
+
+            {/* Card Type Field */}
+            <div>
+              <label htmlFor="cardCompany" className="block text-sm font-bold mb-2 text-slate-700">
+                Card Type
+              </label>
+              <CardDropdown 
+                initialValue={cardCompany}
+                onSelect={(cardName) => setCardCompany(cardName)}
+              />
+            </div>
           </div>
 
           {/* Dialog Buttons */}
           <div className="flex justify-end gap-4 mt-6">
             <motion.button
-              onClick={onClose}
+              onClick={() => setShowDialog(false)}
               className="bg-gray-300 text-gray-700 hover:bg-gray-400 px-4 py-2 rounded-lg"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -139,7 +152,7 @@ export default function AddAccount({ isOpen, onClose, onAddAccount, loading }: A
             </motion.button>
 
             <motion.div className="flex flex-row-reverse items-center gap-2">
-              {loading && (
+              {dialogLoading && (
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 1 }}

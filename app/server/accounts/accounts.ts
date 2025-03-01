@@ -11,7 +11,7 @@ export async function getAccounts(id: string) {
 }
 
 
-export async function addAccount(user_id: string, account_name: string, account_type: string, balance: string, cardno: string, isVerified: boolean) {
+export async function addAccount(user_id: string, account_name: string, account_type: string, balance: string, cardno: string, isVerified: boolean, card_company?: string) {
     try {
       const result = await db.insert(t.accounts).values({
         user_id,
@@ -20,6 +20,7 @@ export async function addAccount(user_id: string, account_name: string, account_
         balance: balance.toString(),
         cardno,
         isVerified,
+        card_company
       });
   
       return { success: true, message: "Account added successfully", result };
@@ -29,7 +30,7 @@ export async function addAccount(user_id: string, account_name: string, account_
     }
   }
 
-export async function editAccount(account_id: string, account_name: string, account_type: string, balance: string, cardno: string, isVerified?: boolean) {
+export async function editAccount(account_id: string, account_name: string, account_type: string, balance: string, cardno: string, isVerified?: boolean, card_company?: string) {
     try {
         const result = await db.update(t.accounts).set({
             account_name,
@@ -37,6 +38,7 @@ export async function editAccount(account_id: string, account_name: string, acco
             balance,
             cardno,
             isVerified,
+            card_company
         }).where(eq(t.accounts.account_id, account_id));
     
         return { success: true, message: "Account updated successfully", result };

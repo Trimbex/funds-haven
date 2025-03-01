@@ -3,48 +3,43 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, Building2, Pencil, CircleCheck, CircleX, Trash2 } from 'lucide-react';
-import { Visa } from 'react-payment-logos/dist/flat';
-import EditAccountDialog from './edit-account'; // Ensure this import is correct
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { CreditCard, Building2, CircleCheck, CircleX } from 'lucide-react';
+import EditAccountDialog from './edit-account';
+import * as card from "react-payment-logos/dist/flat";
+import { useAccounts } from '@/app/context/accountContext';
 
 interface BankCardProps {
-  accountID: string;
-  accountName: string;
-  accountType: string;
-  balance: number;
-  cardno: string;
-  created_at?: string;
-  verified: boolean;
+  account: {
+    account_id: string;
+    account_name: string;
+    account_type: string;
+    balance: number | string;
+    cardno: string;
+    card_company: string;
+    created_at?: string;
+    isVerified: boolean;
+  };
   index: number; // Index for animation delay
-  onUpdateAccount: (updatedAccount: any) => void;
-  onDeleteAccount: (accountID: string) => void;
 }
 
-const BankCard = ({
-  accountID,
-  accountName,
-  accountType,
-  balance,
-  cardno,
-  verified,
-  created_at,
-  index,
-  onUpdateAccount,
-  onDeleteAccount,
-}: BankCardProps) => {
-  const [showMore, setShowMore] = React.useState<boolean>(false);
+const renderCard = (company: string) => {
+  switch (company) {
+    case "Visa":
+      return <card.Visa />;
+    case "MasterCard":
+      return <card.Mastercard />;
+    case "American Express":
+      return <card.Amex />;
+    case "Paypal":
+      return <card.Paypal />;
+    default:
+      return <card.Generic />;
+  }
+}
 
+const BankCard = ({ account, index }: BankCardProps) => {
+  const [showMore, setShowMore] = React.useState<boolean>(false);
+  
   // Animation Variants
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -55,12 +50,9 @@ const BankCard = ({
     }),
   };
 
-  const handleUpdateAccount = (updatedData: any) => {
-    onUpdateAccount({
-      account_id: accountID,
-      ...updatedData
-    });
-  };
+  const balance = typeof account.balance === 'string' 
+    ? parseFloat(account.balance) 
+    : account.balance;
 
   return (
     <motion.div
@@ -79,9 +71,9 @@ const BankCard = ({
         {/* Card Header */}
         <CardHeader className="relative z-10">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-500">{accountName}</span>
-            <Badge variant="default" className={`${verified ? 'bg-green-400' : 'bg-red-600'} text-sm`}>
-              {verified ? (
+            <span className="text-sm font-medium text-gray-500">{account.account_name}</span>
+            <Badge variant="default" className={`${account.isVerified ? 'bg-green-400' : 'bg-red-600'} text-sm`}>
+              {account.isVerified ? (
                 <>
                   <CircleCheck className="inline-block mr-1" /> Verified
                 </>
@@ -92,7 +84,7 @@ const BankCard = ({
               )}
             </Badge>
           </div>
-          <h3 className="text-xl font-bold tracking-tight">{accountType}</h3>
+          <h3 className="text-xl font-bold tracking-tight">{account.account_type}</h3>
         </CardHeader>
 
         {/* Card Content */}
@@ -105,7 +97,7 @@ const BankCard = ({
 
             <div className="flex items-center space-x-2 text-gray-600">
               <CreditCard className="w-4 h-4" />
-              <span className="text-sm font-medium">**** **** **** {cardno.slice(-4)}</span>
+              <span className="text-sm font-medium">**** **** **** {account.cardno.slice(-4)}</span>
             </div>
           </div>
         </CardContent>
@@ -120,17 +112,9 @@ const BankCard = ({
           {showMore && (
             <CardContent className="flex flex-col text-lg space-y-4">
               <div>Number of Transactions: 5</div>
-              <div>Created At: {created_at}</div>
-              <div>Account ID: {accountID}</div>
-              <EditAccountDialog
-                accountID={accountID}
-                accountName={accountName}
-                accountType={accountType}
-                balance={balance.toString()}
-                cardno={cardno}
-                onSave={handleUpdateAccount} // Pass the update function
-                onDeleteAccount={onDeleteAccount} // Pass the delete function
-              />
+              <div>Created At: {account.created_at}</div>
+              <div>Account ID: {account.account_id}</div>
+              <EditAccountDialog account={account} />
             </CardContent>
           )}
         </motion.div>
@@ -140,7 +124,7 @@ const BankCard = ({
           <Button variant="outline" onClick={() => setShowMore(!showMore)}>
             {showMore ? 'Show Less' : 'Show More'}
           </Button>
-          <Visa />
+          {renderCard(account.card_company)}
         </CardFooter>
       </Card>
     </motion.div>

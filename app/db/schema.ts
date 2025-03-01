@@ -24,6 +24,7 @@ export const accounts = t.pgTable('accounts', {
   account_type: t.text('account_type'),
   balance: t.numeric('balance', { precision: 10, scale: 2 }).default('0.00'), // Specify precision and scale
   cardno: t.text('cardno'),
+  card_company: t.text('card_company').default('Other'),
   isVerified: t.boolean('isVerified').default(false),
   updated_at: timestamps.updated_at,
   created_at: timestamps.created_at,

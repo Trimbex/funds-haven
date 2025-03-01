@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 // POST: Add a new account
 export async function POST(request: Request) {
   try {
-    const { user_id, account_name, account_type, balance, cardno, isVerified } = await request.json();
+    const { user_id, account_name, account_type, balance, cardno, isVerified, card_company } = await request.json();
 
     if (!user_id || !account_name || !account_type || !balance || !cardno) {
       return NextResponse.json(
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await addAccount(user_id, account_name, account_type, balance, cardno, isVerified || false);
+    const result = await addAccount(user_id, account_name, account_type, balance, cardno, isVerified, card_company || false);
     return NextResponse.json(result);
   } catch (error) {
     console.error("Error adding account:", error);
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
 // PUT: Update an existing account
 export async function PUT(request: Request) {
   try {
-    const { account_id, account_name, account_type, balance, cardno, isVerified } = await request.json();
+    const { account_id, account_name, account_type, balance, cardno, isVerified, card_company } = await request.json();
 
     if (!account_id || !account_name || !account_type || !balance || !cardno) {
       return NextResponse.json(
@@ -54,7 +54,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const result = await editAccount(account_id, account_name, account_type, balance, cardno, isVerified || false);
+    const result = await editAccount(account_id, account_name, account_type, balance, cardno, isVerified, card_company || false);
     return NextResponse.json(result);
   } catch (error) {
     console.error("Error updating account:", error);
