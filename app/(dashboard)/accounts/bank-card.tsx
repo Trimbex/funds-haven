@@ -5,7 +5,7 @@ import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, Building2, Pencil, CircleCheck, CircleX, Trash2 } from 'lucide-react';
 import { Visa } from 'react-payment-logos/dist/flat';
-import  EditAccountDialog  from './edit-account';
+import EditAccountDialog from './edit-account'; // Ensure this import is correct
 import {
   Dialog,
   DialogTrigger,
@@ -18,7 +18,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-
 interface BankCardProps {
   accountID: string;
   accountName: string;
@@ -28,10 +27,23 @@ interface BankCardProps {
   created_at?: string;
   verified: boolean;
   index: number; // Index for animation delay
+  onUpdateAccount: (updatedAccount: any) => void;
+  onDeleteAccount: (accountID: string) => void;
 }
 
-const BankCard = ({ accountID, accountName, accountType, balance, cardno, verified, created_at, index }: BankCardProps) => {
-  const [showMore, setShowMore] = React.useState<boolean>(verified);
+const BankCard = ({
+  accountID,
+  accountName,
+  accountType,
+  balance,
+  cardno,
+  verified,
+  created_at,
+  index,
+  onUpdateAccount,
+  onDeleteAccount,
+}: BankCardProps) => {
+  const [showMore, setShowMore] = React.useState<boolean>(false);
 
   // Animation Variants
   const cardVariants = {
@@ -43,10 +55,11 @@ const BankCard = ({ accountID, accountName, accountType, balance, cardno, verifi
     }),
   };
 
-  // Handle saving edited account details
-  const handleSave = (updatedAccount: { accountName: string; accountType: string; balance: number; cardno: string }) => {
-    console.log('Updated Account:', updatedAccount);
-    // You can update state or make an API call here
+  const handleUpdateAccount = (updatedData: any) => {
+    onUpdateAccount({
+      account_id: accountID,
+      ...updatedData
+    });
   };
 
   return (
@@ -55,7 +68,7 @@ const BankCard = ({ accountID, accountName, accountType, balance, cardno, verifi
       variants={cardVariants}
       initial="hidden"
       animate="visible"
-      custom={index} 
+      custom={index}
     >
       <Card className="relative overflow-hidden">
         {/* Background Icon */}
@@ -86,13 +99,13 @@ const BankCard = ({ accountID, accountName, accountType, balance, cardno, verifi
         <CardContent className="relative z-10">
           <div className="space-y-4">
             <div>
-              <p className="text-3xl font-bold">${balance}</p>
+              <p className="text-3xl font-bold">${balance.toFixed(2)}</p>
               <p className="text-sm text-gray-500">Available Balance</p>
             </div>
 
             <div className="flex items-center space-x-2 text-gray-600">
               <CreditCard className="w-4 h-4" />
-              <span className="text-sm font-medium">**** **** **** {cardno}</span>
+              <span className="text-sm font-medium">**** **** **** {cardno.slice(-4)}</span>
             </div>
           </div>
         </CardContent>
@@ -105,7 +118,7 @@ const BankCard = ({ accountID, accountName, accountType, balance, cardno, verifi
           className="overflow-hidden"
         >
           {showMore && (
-            <CardContent className="flex flex-col text-lg">
+            <CardContent className="flex flex-col text-lg space-y-4">
               <div>Number of Transactions: 5</div>
               <div>Created At: {created_at}</div>
               <div>Account ID: {accountID}</div>
@@ -113,9 +126,10 @@ const BankCard = ({ accountID, accountName, accountType, balance, cardno, verifi
                 accountID={accountID}
                 accountName={accountName}
                 accountType={accountType}
-                balance={balance}
+                balance={balance.toString()}
                 cardno={cardno}
-                onSave={handleSave}
+                onSave={handleUpdateAccount} // Pass the update function
+                onDeleteAccount={onDeleteAccount} // Pass the delete function
               />
             </CardContent>
           )}
@@ -132,7 +146,5 @@ const BankCard = ({ accountID, accountName, accountType, balance, cardno, verifi
     </motion.div>
   );
 };
-
-
 
 export default BankCard;

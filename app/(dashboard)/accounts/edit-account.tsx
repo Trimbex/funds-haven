@@ -16,9 +16,10 @@ interface EditAccountDialogProps {
   balance: string;
   cardno: string;
   onSave: (updatedAccount: { accountName: string; accountType: string; balance: string; cardno: string }) => void;
+  onDeleteAccount: (accountID: string) => void;
 }
 
-const EditAccountDialog = ({ accountID, accountName, accountType, balance, cardno, onSave }: EditAccountDialogProps) => {
+const EditAccountDialog = ({ accountID, accountName, accountType, balance, cardno, onSave, onDeleteAccount }: EditAccountDialogProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [editedAccountName, setEditedAccountName] = React.useState(accountName);
   const [editedAccountType, setEditedAccountType] = React.useState(accountType);
@@ -64,6 +65,7 @@ const EditAccountDialog = ({ accountID, accountName, accountType, balance, cardn
         if(data.success)
         {
           toast.success("Account successfully modified");
+          setIsOpen(false);
           //setTimeout(() => { window.location.reload(); }, 2000);
         }
         else
@@ -81,36 +83,27 @@ const EditAccountDialog = ({ accountID, accountName, accountType, balance, cardn
 
   const handleDelete = async () =>
   {
-    if(!accountID)
-      {
-        toast.error("Account ID is required");
-        return;
-      }
-
-     const response = await fetch('/api/accounts',
-      {
+    try {
+      const response = await fetch('/api/accounts', {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          account_id: accountID
-        })
-      }
-
-     )
+        body: JSON.stringify({ account_id: accountID }),
+      });
 
       const data = await response.json();
 
-      if(data.success)
-      {
-        toast.success("Account successfully deleted");
-        //setTimeout(() => { window.location.reload(); }, 2000);
+      if (data.success) {
+        toast.success('Account successfully deleted');
+        onDeleteAccount(accountID); // Update parent state
+        setIsOpen(false); // Close the dialog
+      } else {
+        toast.error('Failed to delete the account.');
       }
-      else
-      {
-        toast.error("Failed to delete the account.");
-      }
+    } catch (error) {
+      toast.error('Failed to delete the account.');
+    }
 
   }
 

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { getCurrentUserID } from '@/app/api/general';
@@ -96,6 +96,30 @@ export default function Accounts() {
     }
   };
 
+
+    
+  const handleUpdateAccount = useCallback((updatedAccount: any) => {
+    setAccounts((prevAccounts) =>
+      prevAccounts.map((account) =>
+        account.account_id === updatedAccount.account_id 
+          ? {
+              ...account,
+              account_name: updatedAccount.account_name,
+              account_type: updatedAccount.account_type,
+              balance: updatedAccount.balance,
+              cardno: updatedAccount.cardno
+            }
+          : account
+      )
+    );
+  }, []);
+  
+    const handleDeleteAccount = useCallback((accountID: string) => {
+      setAccounts((prevAccounts) =>
+        prevAccounts.filter((account) => account.account_id !== accountID)
+      );
+    }, []);
+
   return (
     <>
       {loading ? (
@@ -141,6 +165,9 @@ export default function Accounts() {
                   verified={account.isVerified} 
                   created_at={account.created_at ? new Date(account.created_at).toLocaleDateString() : ""} 
                   index={index}
+                  onUpdateAccount={handleUpdateAccount}
+              
+                  onDeleteAccount={handleDeleteAccount}
                 />
               </motion.div>
             ))}
