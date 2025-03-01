@@ -1,76 +1,88 @@
-import { NextResponse } from "next/server";
-import { supabase } from "../../utils/supabase/client";
-import { getAuth } from "@clerk/nextjs/server";
-import { NextRequest } from "next/server";
+import { NextResponse } from 'next/server';
+import { getAccounts, addAccount, editAccount, deleteAccount } from '@/app/server/accounts/accounts';
 
-export async function GET(request: NextRequest) {
+// GET: Fetch accounts for a specific user
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const userId = url.searchParams.get('user_id');
+
+  if (!userId) {
+    return NextResponse.json({ success: false, message: 'user_id is required' }, { status: 400 });
+  }
+
   try {
-    // You can check for authentication here (if needed)
-    const { userId } = getAuth(request);
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Fetching all accounts from the 'accounts' table
-    const { data, error } = await supabase.from("accounts").select("*");
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-
-    return NextResponse.json(data);
+    const accounts = await getAccounts(userId);
+    return NextResponse.json({ success: true, accounts });
   } catch (error) {
+    console.error("Error fetching accounts:", error);
+    return NextResponse.json({ success: false, message: 'Failed to fetch accounts' }, { status: 500 });
+  }
+}
+
+// POST: Add a new account
+export async function POST(request: Request) {
+  try {
+    const { user_id, account_name, account_type, balance, cardno, isVerified, card_company } = await request.json();
+
+    if (!user_id || !account_name || !account_type || !balance || !cardno) {
+      return NextResponse.json(
+        { success: false, message: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    const result = await addAccount(user_id, account_name, account_type, balance, cardno, isVerified, card_company || false);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Error adding account:", error);
     return NextResponse.json(
-      { error: "Something went wrong" },
+      { success: false, message: 'Failed to add account' },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request: NextRequest) {
+// PUT: Update an existing account
+export async function PUT(request: Request) {
   try {
-    const body = await request.json();
+    const { account_id, account_name, account_type, balance, cardno, isVerified, card_company } = await request.json();
 
-    // Extract data from the request body
-    const {
-      user_id,
-      name,
-      plaid_id,
-    }: { user_id: string; name: string; plaid_id: string } = body;
-
-    // Validate the request body
-    if (!user_id || !name || !plaid_id) {
+    if (!account_id || !account_name || !account_type || !balance || !cardno) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { success: false, message: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // You can check for authentication here (if needed)
-    const { userId } = getAuth(request);
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Inserting new account into the 'accounts' table
-    const { data, error } = await supabase.from("accounts").insert([
-      {
-        user_id,
-        name,
-        plaid_id,
-      },
-    ]);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-
-    return NextResponse.json(data, { status: 201 });
+    const result = await editAccount(account_id, account_name, account_type, balance, cardno, isVerified, card_company || false);
+    return NextResponse.json(result);
   } catch (error) {
+    console.error("Error updating account:", error);
     return NextResponse.json(
-      { error: "Something went wrong" },
+      { success: false, message: 'Failed to update account' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: Delete an account
+export async function DELETE(request: Request) {
+  try {
+    const { account_id } = await request.json();
+
+    if (!account_id) {
+      return NextResponse.json(
+        { success: false, message: 'account_id is required' },
+        { status: 400 }
+      );
+    }
+
+    const result = await deleteAccount(account_id);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Error deleting account:", error);
+    return NextResponse.json(
+      { success: false, message: 'Failed to delete account' },
       { status: 500 }
     );
   }
