@@ -8,9 +8,10 @@ import BankCard from "./bank-card";
 import AddAccount from './add-account'; 
 import DotLoader from "@/components/loader/loader";
 import { AccountsProvider, useAccounts } from '@/app/context/accountContext';
+import { a } from 'framer-motion/dist/types.d-6pKw1mTI';
 
 function AccountsContent() {
-  const { accounts, loading, showDialog, setShowDialog, dialogLoading } = useAccounts();
+  const { accounts, loading, showDialog, setShowDialog, dialogLoading, addAccount } = useAccounts();
 
   if (loading) {
     return (
@@ -22,24 +23,77 @@ function AccountsContent() {
 
   return (
     <>
-      {/* Header Section */}
-      <motion.div 
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full bg-[#009dff] py-48 px-6 md:px-12 lg:px-24"
+{/* Header Section */}
+<motion.div 
+  initial={{ opacity: 0, y: -50 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6, ease: "easeOut" }}
+  className="w-full bg-gradient-to-r from-[#009dff] to-[#0077c2] py-24 px-6 md:px-12 lg:px-24 relative overflow-hidden"
+>
+  {/* Animated background elements */}
+  <motion.div 
+    className="absolute top-0 right-0 w-64 h-64 bg-[#40b5ff] rounded-full opacity-10"
+    initial={{ x: 100, y: -100 }}
+    animate={{ x: 0, y: 0 }}
+    transition={{ duration: 1.5, ease: "easeOut" }}
+  />
+  <motion.div 
+    className="absolute bottom-0 left-0 w-48 h-48 bg-[#40b5ff] rounded-full opacity-10"
+    initial={{ x: -100, y: 100 }}
+    animate={{ x: 0, y: 0 }}
+    transition={{ duration: 1.5, ease: "easeOut" }}
+  />
+  
+  <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-8 relative z-10">
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+    >
+      <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white">
+        My Accounts
+      </h1>
+      <p className="text-gray-100 mt-4 text-lg md:text-xl max-w-2xl">
+        Manage your accounts, view balances, and perform transactions seamlessly.
+      </p>
+    </motion.div>
+    
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+      className="mt-6 md:mt-0"
+    >
+      <Button 
+        className="bg-white text-[#009dff] hover:bg-gray-100 hover:text-[#0077c2] transition-all duration-300 px-6 py-2 rounded-lg font-medium shadow-lg"
+        onClick={() => setShowDialog(true)}
       >
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-          <div>
-            <h1 className="text-5xl md:text-6xl font-bold text-white">
-              My Accounts
-            </h1>
-            <p className="text-gray-100 mt-6 text-xl md:text-2xl max-w-2xl">
-              Manage your accounts, view balances, and perform transactions seamlessly.
-            </p>
-          </div>
-        </div>
-      </motion.div>
+        Add New Account
+      </Button>
+    </motion.div>
+  </div>
+  
+  {/* Stats bar */}
+  <motion.div 
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
+    className="max-w-7xl mx-auto mt-12 bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-wrap justify-between items-center gap-4"
+  >
+    <div className="text-center px-4 py-2 flex-1">
+      <p className="text-white text-sm">Total Balance</p>
+      <p className="text-white font-bold text-xl">$ {accounts.reduce((sum,account) => sum + Number(account.balance), 0)}</p>
+    </div>
+    <div className="text-center px-4 py-2 flex-1 border-l border-white/20">
+      <p className="text-white text-sm">Verified Accounts</p>
+      <p className="text-white font-bold text-xl">{accounts.reduce((sum,acc) => acc.isVerified ? sum = sum + 1 : sum, 0)}</p>
+    </div>
+    <div className="text-center px-4 py-2 flex-1 border-l border-white/20">
+      <p className="text-white text-sm">Last Update</p>
+      <p className="text-white font-bold text-xl">{new Date(accounts.reduce((latest, account) => new Date(account.created_at) > new Date(latest.created_at) ? account : latest).created_at || 'N/A').toLocaleDateString()}</p>
+    </div>
+  </motion.div>
+</motion.div>
 
       {/* Accounts List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ml-16 md:ml-24 lg:ml-48 gap-6 mb-20">
