@@ -1,10 +1,18 @@
-'use client';
-
 import React from 'react';
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
-export default function CategoriesPage() {
-  return (
+interface HeaderProps {
+    title: string;
+    description: string;
+    StatsComponent?: React.ReactNode;
+    }
+
+
+export default function Header({title, description, StatsComponent}: HeaderProps) {
+
+    return (
+
 <motion.div 
   initial={{ opacity: 0, y: -50 }}
   animate={{ opacity: 1, y: 0 }}
@@ -32,10 +40,10 @@ export default function CategoriesPage() {
       transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
     >
       <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white">
-        Categories
+        {title}
       </h1>
       <p className="text-gray-100 mt-4 text-lg md:text-xl max-w-2xl">
-      Manage budgets, track expenses, optimize savings, and plan investments effortlessly.
+        {description}
       </p>
     </motion.div>
     
@@ -45,11 +53,17 @@ export default function CategoriesPage() {
       transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
       className="mt-6 md:mt-0"
     >
-
+      <Button 
+        className="bg-white text-[#009dff] hover:bg-gray-100 hover:text-[#0077c2] transition-all duration-300 px-6 py-2 rounded-lg font-medium shadow-lg"
+        onClick={() => setShowDialog(true)}
+      >
+        Add New Account
+      </Button>
     </motion.div>
   </div>
+  </motion.div>
   
 
-</motion.div>
-  );
+  
+    );
 }
