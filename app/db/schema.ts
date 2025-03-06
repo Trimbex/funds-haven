@@ -22,7 +22,7 @@ export const accounts = t.pgTable('accounts', {
   user_id: t.uuid('user_id').notNull().references(() => users.id),
   account_name: t.text('account_name'),
   account_type: t.text('account_type'),
-  balance: t.numeric('balance', { precision: 10, scale: 2 }).default('0.00'), // Specify precision and scale
+  balance: t.numeric('balance', { precision: 10, scale: 2 }).default('0.00'), 
   cardno: t.text('cardno'),
   card_company: t.text('card_company').default('Other'),
   isVerified: t.boolean('isVerified').default(false),
@@ -30,28 +30,58 @@ export const accounts = t.pgTable('accounts', {
   created_at: timestamps.created_at,
 });
 
-// Similarly update the transactions table
-export const transactions = t.pgTable('transactions', {
-  transaction_id: t.uuid('id').primaryKey().notNull(),
-  account_id: t.uuid('account_id').notNull().references(() => accounts.account_id),
-  transaction_type: t.text('transaction_type'),
-  amount: t.numeric('amount', { precision: 10, scale: 2 }), // Add precision and scale here too
-  description: t.text('description'),
-  date: t.timestamp('date'),
-  created_at: timestamps.created_at,
-});
 
-export const categories = t.pgTable('categories', {
-  category_id: t.uuid('id').primaryKey().notNull(),
-  name: t.text('name').notNull().unique(),
-  description: t.text('description'),
-  created_at: timestamps.created_at,
-});
+export const categories = t.pgTable('categories',{
+  category_id: t.uuid('id').primaryKey().defaultRandom().notNull(),
+  category_name: t.text('category_name').notNull(),
+  category_description: t.text('category_description'),
+  tags: t.json('tags'),
+  budget: t.numeric('budget', { precision: 10, scale: 2 }).default('0.00'),
+  spent: t.numeric('spent', { precision: 10, scale: 2 }).default('0.00'),
+  color: t.text('color').default('gray'),
+  predefined: t.boolean('predefined').default(true),
+  image: t.text('image'),
+  user_id: t.uuid('user_id').notNull().references(() => users.id),
+ 
+})
 
-export const transaction_categories = t.pgTable('transaction_categories', {
-  transaction_id: t.uuid('transaction_id').notNull().references(() => transactions.transaction_id),
-  category_id: t.uuid('category_id').notNull().references(() => categories.category_id),
-});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // Similarly update the transactions table
+// export const transactions = t.pgTable('transactions', {
+//   transaction_id: t.uuid('id').primaryKey().notNull(),
+//   account_id: t.uuid('account_id').notNull().references(() => accounts.account_id),
+//   transaction_type: t.text('transaction_type'),
+//   amount: t.numeric('amount', { precision: 10, scale: 2 }), // Add precision and scale here too
+//   description: t.text('description'),
+//   date: t.timestamp('date'),
+//   created_at: timestamps.created_at,
+// });
+
+// export const categories = t.pgTable('categories', {
+//   category_id: t.uuid('id').primaryKey().notNull(),
+//   name: t.text('name').notNull().unique(),
+//   description: t.text('description'),
+//   created_at: timestamps.created_at,
+// });
+
+// export const transaction_categories = t.pgTable('transaction_categories', {
+//   transaction_id: t.uuid('transaction_id').notNull().references(() => transactions.transaction_id),
+//   category_id: t.uuid('category_id').notNull().references(() => categories.category_id),
+// });
 
 
 
