@@ -7,19 +7,13 @@ import { Wallet, CreditCard, DollarSign, ArrowUp, ArrowDown, Pencil, Trash2, Rep
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 
 export default function CategoryCard() {
   const budget = 5000;
   const spent = 3500;
-  const spentPercentage = Math.round((spent / budget) * 100);
-
-  // Determine progress bar color based on percentage
-  const getProgressColor = () => {
-    if (spentPercentage <= 50) return "bg-green-500";
-    if (spentPercentage <= 75) return "bg-yellow-500";
-    return "bg-red-500";
-  };
+  
+  // Example tags for SEO
+  const tags = ["Tag1", "Tag2", "Tag3"];
 
   return (
         <Card className="relative flex flex-row overflow-hidden w-full lg:w-2/3">
@@ -58,18 +52,13 @@ export default function CategoryCard() {
             </CardHeader>
 
             <div className="px-6 mt-2">
-                <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-500">
-                        Spent: ${spent} of ${budget}
-                    </span>
-                    <span className="text-sm font-medium text-gray-500">
-                        {spentPercentage}%
-                    </span>
+                <div className="flex items-center mb-2 flex-wrap gap-2">
+                    {tags.map((tag, index) => (
+                        <Badge key={index} className="bg-gray-100 text-gray-800 hover:bg-gray-100 text-md rounded-full border-0 shadow-sm px-3 py-1">
+                        {tag}
+                    </Badge>
+                    ))}
                 </div>
-                <Progress 
-                    value={spentPercentage} 
-                    className={`w-full h-2 ${getProgressColor()}`}
-                />
             </div>
 
             <CardContent>
