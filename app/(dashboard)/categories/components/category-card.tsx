@@ -8,7 +8,22 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-export default function CategoryCard() {
+
+export type Category = {
+    category_id: string;
+    category_name: string;
+    category_description: string;
+    tags: string[];
+    image: string;
+    budget: number;
+    spent: number;
+    predefined: boolean;
+    color: string;
+    recurring: boolean;
+};
+
+
+export default function CategoryCard({ category }: { category: Category }) {
   const budget = 5000;
   const spent = 3500;
   
@@ -18,11 +33,20 @@ export default function CategoryCard() {
   return (
         <Card className="relative flex flex-row overflow-hidden w-full lg:w-2/3">
             <div 
-            className='absolute top-0 left-0 w-full h-2 bg-cyan-500 z-10' 
+            style={{backgroundColor: category.color}}
+            className={`absolute top-0 left-0 w-full h-2 ${!category.color ? 'bg-neutral-950' : ''} z-10`}
             />
 
             <div className='relative w-1/3 h-auto '>
-            <Image src="/login.jpg" alt="category image" fill className='object-cover' />
+            <Image 
+                src={category.image} 
+                alt="category image" 
+                fill 
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" 
+                priority 
+                className='object-cover' 
+                />
+
             </div>
 
             <div className='w-2/3 '>
@@ -30,15 +54,15 @@ export default function CategoryCard() {
                 <div>
                     <div className="flex items-center gap-2">
                         <CardTitle className='mt-4 text-4xl font-bold'>
-                            Category Name
+                            {category.category_name}
                         </CardTitle>
-                        <Badge variant="secondary" className="mt-4 flex items-center gap-1">
+                        {category.recurring && <Badge variant="secondary" className="mt-4 flex items-center gap-1">
                             <Repeat className="w-4 h-4" />
                             Recurring
-                        </Badge>
+                        </Badge>}
                     </div>
                     <CardDescription className='text-2xl'>
-                        Category description. Some text for testing 
+                        {category.category_description}
                     </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
@@ -53,7 +77,7 @@ export default function CategoryCard() {
 
             <div className="px-6 mt-2">
                 <div className="flex items-center mb-2 flex-wrap gap-2">
-                    {tags.map((tag, index) => (
+                    {category.tags?.tags.map((tag, index) => (
                         <Badge key={index} className="bg-gray-100 text-gray-800 hover:bg-gray-100 text-md rounded-full border-0 shadow-sm px-3 py-1">
                         {tag}
                     </Badge>

@@ -58,7 +58,9 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     useEffect(() => {
         const fetchCategories = async () => {
+            if(userID)
             try {
+                
                 const response = await fetch(`/api/categories?user_id=${userID}`); 
                 const data = await response.json();
                 if (data.success) {
