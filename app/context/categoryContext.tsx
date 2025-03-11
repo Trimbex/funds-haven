@@ -1,10 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getCurrentUserID } from '../api/general';
 
-
-export type Category =
-{
+export type Category = {
     category_id: string;
     category_name: string;
     category_description: string;
@@ -15,39 +14,118 @@ export type Category =
     predefined: boolean;
     color: string;
     recurring: boolean;
-}
+};
 
 type CategoryContextType = {
-
     categories: Category[];
-    addCategory: (category: Category) => void;
-    updateCategory: (category: Category) => void;
-    deleteCategory: (category_id: string) => void;
-    editCategory: (category_id: string) => void;
+    addCategory: (category: Category) => Promise<void>;
+    updateCategory: (category: Category) => Promise<void>;
+    deleteCategory: (category_id: string) => Promise<void>;
+};
 
-
-
-}
-export const CategoryContext = createContext<CategoryContextType>(
-    {   categories: [],
-        addCategory: () => {},
-        updateCategory: () => {},
-        deleteCategory: () => {},
-        editCategory: () => {},
-    }
-);
+export const CategoryContext = createContext<CategoryContextType>({
+    categories: [],
+    addCategory: async () => {},
+    updateCategory: async () => {},
+    deleteCategory: async () => {},
+});
 
 export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [userID, setUserID] = useState<string | null>(null);
 
-    
+    useEffect(() => {
 
-    return(
+        const fetchUserID = async () => {
+            try{
+                const response = await getCurrentUserID();
+                
 
-    )
-}
+                if(response.success){
+                    setUserID(response.userId);
+                } 
+                
 
+            } 
+            catch (error)
+            {
+               
+                    console.error('Failed to fetch user ID:', error);           
+            }
+    }; 
+    fetchUserID(); 
+    },[]);
 
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch(`/api/categories?user_id=${userID}`); 
+                const data = await response.json();
+                if (data.success) {
+                    setCategories(data.categories);
+                }
+            } catch (error) {
+                console.error('Failed to fetch categories:', error);
+            }
+        };
+        fetchCategories();
+    }, [userID]);
 
+    const addCategory = async (category: Category) => {
+        try {
+            const response = await fetch('/api/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(category),
+            });
+            const data = await response.json();
+            if (data.success) {
+                setCategories((prev) => [...prev, category]);
+            }
+        } catch (error) {
+            console.error('Failed to add category:', error);
+        }
+    };
 
+    const updateCategory = async (category: Category) => {
+        try {
+            const response = await fetch('/api/categories', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(category),
+            });
+            const data = await response.json();
+            if (data.success) {
+                setCategories((prev) =>
+                    prev.map((cat) => (cat.category_id === category.category_id ? category : cat))
+                );
+            }
+        } catch (error) {
+            console.error('Failed to update category:', error);
+        }
+    };
+
+    const deleteCategory = async (category_id: string) => {
+        try {
+            const response = await fetch('/api/categories', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category_id }),
+            });
+            const data = await response.json();
+            if (data.success) {
+                setCategories((prev) => prev.filter((cat) => cat.category_id !== category_id));
+            }
+        } catch (error) {
+            console.error('Failed to delete category:', error);
+        }
+    };
+
+    return (
+        <CategoryContext.Provider value={{ categories, addCategory, updateCategory, deleteCategory }}>
+            {children}
+        </CategoryContext.Provider>
+    );
+};
 
 export const useCategories = () => useContext(CategoryContext);
