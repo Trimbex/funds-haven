@@ -1,19 +1,23 @@
 'use client';
 
-import React from 'react';
+import React, {useState} from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Wallet, CreditCard, DollarSign, ArrowUp, ArrowDown, Pencil, Trash2, Repeat } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import CategoryForm from './category-form'; 
+
 
 
 export type Category = {
     category_id: string;
     category_name: string;
     category_description: string;
-    tags: string[];
+    tags: {
+        tags: string[];
+    };
     image: string;
     budget: number;
     spent: number;
@@ -24,13 +28,26 @@ export type Category = {
 
 
 export default function CategoryCard({ category }: { category: Category }) {
-  const budget = 5000;
-  const spent = 3500;
+//   const budget = 5000;
+//   const spent = 3500;
   
-  // Example tags for SEO
-  const tags = ["Tag1", "Tag2", "Tag3"];
+//   // Example tags for SEO
+//   const tags = ["Tag1", "Tag2", "Tag3"];
+
+const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Function to open the edit dialog
+  const handleEditClick = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  // Function to close the edit dialog
+  const handleCloseDialog = () => {
+    setIsEditDialogOpen(false);
+  };
 
   return (
+    <>
         <Card className="relative flex flex-row overflow-hidden w-full lg:w-2/3">
             <div 
             style={{backgroundColor: category.color}}
@@ -66,7 +83,7 @@ export default function CategoryCard({ category }: { category: Category }) {
                     </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="text-cyan-500 hover:text-cyan-600">
+                    <Button variant="outline" size="icon" className="text-cyan-500 hover:text-cyan-600" onClick={handleEditClick}>
                         <Pencil className="w-5 h-5" />
                     </Button>
                     <Button variant="destructive" size="icon">
@@ -94,7 +111,7 @@ export default function CategoryCard({ category }: { category: Category }) {
                                 Budget
                             </CardTitle>
                             <CardContent className="flex flex-col items-center justify-center">
-                                <div className="mt-4 text-4xl font-bold text-center">$5000</div>
+                                <div className="mt-4 text-4xl font-bold text-center">${category.budget}</div>
                                 <div className="flex items-center gap-1 mt-2 text-sm">
                                     <ArrowDown className="w-4 h-4 text-red-500" />
                                     <span className="text-red-500">5% less than last month</span>
@@ -108,7 +125,7 @@ export default function CategoryCard({ category }: { category: Category }) {
                                 Amount Spent
                             </CardTitle>
                             <CardContent className="flex flex-col items-center justify-center">
-                                <div className="mt-4 text-4xl font-bold text-center">$2500</div>
+                                <div className="mt-4 text-4xl font-bold text-center">${category.spent}</div>
                                 <div className="flex items-center gap-1 mt-2 text-sm">
                                     <ArrowDown className="w-4 h-4 text-red-500" />
                                     <span className="text-red-500">5% less than last month</span>
@@ -122,7 +139,7 @@ export default function CategoryCard({ category }: { category: Category }) {
                                 Remaining
                             </CardTitle>
                             <CardContent className="flex flex-col items-center justify-center">
-                                <div className="mt-4 text-4xl font-bold text-center">$2500</div>
+                                <div className="mt-4 text-4xl font-bold text-center">${category.budget - category.spent}</div>
                                 <div className="flex items-center gap-1 mt-2 text-sm">
                                     <ArrowUp className="w-4 h-4 text-green-500" />
                                     <span className="text-green-500">12% more than last month</span>
@@ -137,5 +154,13 @@ export default function CategoryCard({ category }: { category: Category }) {
             </div>
 
         </Card>
+
+
+        <CategoryForm 
+        isOpen={isEditDialogOpen}
+        onClose={handleCloseDialog}
+        category={category} // Pass the category to edit
+      />
+      </>
   );
 }

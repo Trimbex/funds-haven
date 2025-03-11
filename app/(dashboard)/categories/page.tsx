@@ -8,9 +8,12 @@ import { CategoryProvider, useCategories } from '@/app/context/categoryContext';
 
  function CategoriesPage() {
   const { categories } = useCategories();
+  
   React.useEffect(() => {
     console.log(JSON.stringify(categories, null, 2));
   }, [categories]);
+
+
   return (
     <>
     <Header />
