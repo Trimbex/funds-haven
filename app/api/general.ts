@@ -7,7 +7,7 @@ import { supabase } from '@/app/utils/supabase/client'
 
 
 export async function getCurrentUserID() {
-        
+       
     try {
       const { data, error } = await supabase.auth.getUser();
       
