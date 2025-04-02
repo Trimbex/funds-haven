@@ -9,6 +9,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import CategoryForm from './category-form'; 
 
+import { useCategories } from '@/app/context/categoryContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 
 export type Category = {
@@ -34,7 +46,14 @@ export default function CategoryCard({ category }: { category: Category }) {
 //   // Example tags for SEO
 //   const tags = ["Tag1", "Tag2", "Tag3"];
 
+const { deleteCategory } = useCategories();
 const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+const handleDelete = async () => {
+  await deleteCategory(category.category_id);
+  setIsDeleteDialogOpen(false);
+};
 
   // Function to open the edit dialog
   const handleEditClick = () => {
@@ -86,7 +105,7 @@ const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
                     <Button variant="outline" size="icon" className="text-cyan-500 hover:text-cyan-600" onClick={handleEditClick}>
                         <Pencil className="w-5 h-5" />
                     </Button>
-                    <Button variant="destructive" size="icon">
+                    <Button variant="destructive" size="icon" onClick={() => setIsDeleteDialogOpen(true)}>
                         <Trash2 className="w-5 h-5" />
                     </Button>
                 </div>
@@ -162,6 +181,28 @@ const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
         category={category}
         mode='edit' // Pass the category to edit
       />
+
+<AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the category "{category.category_name}" and all its associated data.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    
       </>
   );
 }

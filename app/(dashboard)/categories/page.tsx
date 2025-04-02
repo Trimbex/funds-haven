@@ -12,7 +12,7 @@ import  CategoryForm  from './components/category-form';
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 
- function CategoriesPage() {
+function CategoriesPage() {
   const { categories, isLoading, addCategory } = useCategories();
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -31,21 +31,14 @@ import { Checkbox } from "@/components/ui/checkbox";
       (searchCriteria.description && category.category_description.toLowerCase().includes(query)) ||
       (searchCriteria.tags && category.tags.tags.some(tag => tag.toLowerCase().includes(query)))
     );
-  }, [categories, searchQuery]);
-
+  }, [categories, searchQuery, searchCriteria]);
 
   const handleCriteriaChange = (criteria: keyof typeof searchCriteria) => {
     const newCriteria = { ...searchCriteria, [criteria]: !searchCriteria[criteria] };
-    // Prevent unchecking if it's the last checked box
     if (Object.values(newCriteria).some(value => value)) {
       setSearchCriteria(newCriteria);
     }
   };
-  
-  React.useEffect(() => {
-    console.log(JSON.stringify(categories, null, 2));
-  }, [categories]);
-
 
   return (
     <>
@@ -103,9 +96,27 @@ import { Checkbox } from "@/components/ui/checkbox";
           </div>
           
           <div className="flex flex-col items-center gap-4 mt-8 px-6">
-            {filteredCategories.map((category) => (
-              <CategoryCard key={category.category_id} category={category} />
-            ))}
+            {filteredCategories.length > 0 ? (
+              filteredCategories.map((category) => (
+                <CategoryCard key={category.category_id} category={category} />
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  No Categories Found
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
+                  {searchQuery 
+                    ? "No categories match your search criteria" 
+                    : "Get started by adding your first category"}
+                </p>
+                {/* {!searchQuery && (
+                  <Button onClick={() => setIsFormOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Category
+                  </Button>
+                )} */}
+              </div>
+            )}
           </div>
           
           <CategoryForm 
@@ -119,8 +130,7 @@ import { Checkbox } from "@/components/ui/checkbox";
   );
 }
 
-export default function Page()
-{
+export default function Page() {
   return (
     <CategoryProvider>
       <CategoriesPage />
