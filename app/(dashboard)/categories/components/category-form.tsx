@@ -111,9 +111,10 @@ interface CategoryFormProps {
   isOpen: boolean;
   onClose: () => void;
   category?: Category;
+  mode?: 'add' | 'edit';
 }
 
-export default function CategoryForm({ isOpen, onClose, category }: CategoryFormProps) {
+export default function CategoryForm({ isOpen, onClose, category, mode = 'add' }: CategoryFormProps) {
   const { addCategory, updateCategory } = useCategories();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("basics");
@@ -132,7 +133,8 @@ export default function CategoryForm({ isOpen, onClose, category }: CategoryForm
   });
 
   useEffect(() => {
-    if (category) {
+    setIsEditing(mode === 'edit');
+    if (mode === 'edit' && category) {
       setFormData({
         category_id: category.category_id,
         category_name: category.category_name,
@@ -160,9 +162,9 @@ export default function CategoryForm({ isOpen, onClose, category }: CategoryForm
         recurring: false,
         icon: 'ShoppingCart',
       });
-      setIsEditing(false);
+    //  setIsEditing(false);
     }
-  }, [category, isOpen]);
+  }, [category, isOpen, mode]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

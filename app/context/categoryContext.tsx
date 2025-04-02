@@ -21,6 +21,7 @@ type CategoryContextType = {
     addCategory: (category: Category) => Promise<void>;
     updateCategory: (category: Category) => Promise<void>;
     deleteCategory: (category_id: string) => Promise<void>;
+    isLoading: boolean;
 };
 
 export const CategoryContext = createContext<CategoryContextType>({
@@ -28,11 +29,13 @@ export const CategoryContext = createContext<CategoryContextType>({
     addCategory: async () => {},
     updateCategory: async () => {},
     deleteCategory: async () => {},
+    isLoading: true, 
 });
 
 export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [userID, setUserID] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
 
@@ -66,8 +69,10 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 if (data.success) {
                     setCategories(data.categories);
                 }
+                setIsLoading(false);
             } catch (error) {
                 console.error('Failed to fetch categories:', error);
+                setIsLoading(false);
             }
         };
         fetchCategories();
@@ -78,7 +83,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const response = await fetch('/api/categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(category),
+                body: JSON.stringify({...category, user_id: userID}),
             });
             const data = await response.json();
             if (data.success) {
@@ -124,7 +129,7 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     return (
-        <CategoryContext.Provider value={{ categories, addCategory, updateCategory, deleteCategory }}>
+        <CategoryContext.Provider value={{ categories, addCategory, updateCategory, deleteCategory, isLoading }}>
             {children}
         </CategoryContext.Provider>
     );

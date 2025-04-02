@@ -159,7 +159,8 @@ const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
         <CategoryForm 
         isOpen={isEditDialogOpen}
         onClose={handleCloseDialog}
-        category={category} // Pass the category to edit
+        category={category}
+        mode='edit' // Pass the category to edit
       />
       </>
   );
