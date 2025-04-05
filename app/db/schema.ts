@@ -46,7 +46,22 @@ export const categories = t.pgTable('categories',{
  
 })
 
-
+export const transactions = t.pgTable('transactions', {
+  transaction_id: t.uuid('id').primaryKey().defaultRandom().notNull(),
+  user_id: t.uuid('user_id').notNull().references(() => users.id),
+  account_id: t.uuid('account_id').references(() => accounts.account_id),
+  category_id: t.uuid('category_id').references(() => categories.category_id),
+  amount: t.numeric('amount', { precision: 10, scale: 2 }).notNull(),
+  description: t.text('description'),
+  transaction_date: t.timestamp('transaction_date').defaultNow().notNull(),
+  transaction_type: t.text('transaction_type').notNull(), // 'income' or 'expense'
+  payment_method: t.text('payment_method'), // e.g., 'cash', 'credit', 'debit'
+  status: t.text('status').default('completed'), // 'completed', 'pending', 'failed'
+  recurring: t.boolean('recurring').default(false),
+  updated_at: timestamps.updated_at,
+  created_at: timestamps.created_at,
+  deleted_at: timestamps.deleted_at,
+});
 
 
 
