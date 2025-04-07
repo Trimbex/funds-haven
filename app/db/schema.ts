@@ -50,7 +50,8 @@ export const transactions = t.pgTable('transactions', {
   transaction_id: t.uuid('id').primaryKey().defaultRandom().notNull(),
   user_id: t.uuid('user_id').notNull().references(() => users.id),
   account_id: t.uuid('account_id').references(() => accounts.account_id),
-  category_id: t.uuid('category_id').references(() => categories.category_id),
+  // Replace category_id with categories JSON field
+  categories: t.json('categories').default([]), // Will store array of {id: string|null, name: string} objects
   amount: t.numeric('amount', { precision: 10, scale: 2 }).notNull(),
   description: t.text('description'),
   transaction_date: t.timestamp('transaction_date').defaultNow().notNull(),
