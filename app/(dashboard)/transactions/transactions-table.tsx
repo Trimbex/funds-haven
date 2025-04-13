@@ -280,7 +280,7 @@ export function TransactionsTable() {
     
     return transactions.map(transaction => ({
       id: transaction.transaction_id,
-      date: transaction.transaction_date ? new Date(transaction.transaction_date).toISOString().split('T')[0] : '',
+      date: transaction.transaction_date ? new Date(transaction.transaction_date) : '',
       description: transaction.description || '',
       category: transaction.categories && transaction.categories.length > 0 
         ? transaction.categories.map(cat => cat.name).join(', ') 

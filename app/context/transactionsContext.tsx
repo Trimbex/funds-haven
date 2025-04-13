@@ -9,6 +9,7 @@ interface TransactionsContextType {
   transactions: Transaction[];
   isLoading: boolean;
   error: string | null;
+  userID: string | null;
   fetchTransactions: (userId: string) => Promise<void>;
   addTransaction: (
     userId: string,
@@ -83,6 +84,29 @@ export const TransactionsProvider: React.FC<{ children: ReactNode }> = ({ childr
 }; 
 fetchUserID(); 
 },[]);
+
+
+
+useEffect(() => {
+  const addTestTransaction = async () => {
+    if (userID && transactions.length === 0) {
+      const testTransaction = {
+        amount: 100,
+        description: "Test Transaction",
+       transaction_date: new Date(),
+        transaction_type: "expense" as TransactionType,
+        categories: [{ id: null, name: "Test Category" }],
+        recurring: false,
+        status: "completed" as TransactionStatus
+      };
+
+      console.log("Adding test transaction:", testTransaction);
+      await addTransaction(userID, testTransaction);
+    }
+  };
+
+  addTestTransaction();
+}, [transactions, userID]);
 
   // Fetch all transactions for a user
   const fetchTransactions = async (userId: string) => {
@@ -299,6 +323,7 @@ fetchUserID();
     transactions,
     isLoading,
     error,
+    userID,
     fetchTransactions,
     addTransaction,
     updateTransaction,

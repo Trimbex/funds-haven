@@ -61,7 +61,7 @@ export async function addTransaction(userId: string, input: Omit<CreateTransacti
       categories: input.categories || [],
       amount: input.amount,
       description: input.description || '',
-      transaction_date: input.transaction_date || new Date(),
+      transaction_date: new Date(input.transaction_date) || new Date(),
       transaction_type: input.transaction_type,
       payment_method: input.payment_method,
       status: input.status || 'completed',

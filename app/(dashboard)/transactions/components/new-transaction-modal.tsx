@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -20,7 +20,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useTransactions } from '@/app/context/transactionsContext'
-import { getCurrentUserID } from '@/app/api/general'
 
 export function NewTransactionModal({
   isOpen,
@@ -37,7 +36,8 @@ export function NewTransactionModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const { addTransaction } = useTransactions()
+  const { addTransaction, userID } = useTransactions()
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,22 +45,34 @@ export function NewTransactionModal({
     setError(null)
 
     try {
-      const userId = await getCurrentUserID().then(res => res.userId)
-      
-      if (!userId) {
+      if (!userID) {
         throw new Error('User ID not found')
       }
+
+      // Ensure we have a valid date string
+      if (!date) {
+        throw new Error('Invalid date')
+      }
+
+      // Create the date object more safely
+      const transactionDate = new Date(date + 'T12:00:00Z')
+      console.log('Date string input:', date)
+      console.log('Transaction date object:', transactionDate)
+      console.log('Is valid date?', transactionDate instanceof Date && !isNaN(transactionDate.getTime()))
 
       const newTransaction = {
         amount: parseFloat(amount),
         description,
-        transaction_date: new Date(date),
+        transaction_date: transactionDate, // Send as ISO string
         transaction_type: type,
-        categories: [{ id: '', name: category }],
+        categories: [{ id: null, name: category }],
         recurring: false,
+        status: 'completed' as const
       }
 
-      const result = await addTransaction(userId, newTransaction)
+      console.log('Full transaction object:', JSON.stringify(newTransaction, null, 2)) 
+
+      const result = await addTransaction(userID, newTransaction)
       
       if (result) {
         // Reset form and close modal

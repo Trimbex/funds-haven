@@ -36,6 +36,14 @@ export async function GET(request: Request) {
             categories
         } = body;
 
+        console.log('Received transaction_date:', transaction_date);
+        if (transaction_date && !Date.parse(transaction_date)) {
+            return NextResponse.json({ 
+                success: false, 
+                message: 'Invalid transaction_date format' 
+            }, { status: 400 });
+        }
+
         if (!user_id || !transaction_type || !amount) {
             return NextResponse.json({ success: false, message: 'Missing required fields: user_id, transaction_type, and amount are required' }, { status: 400 });
         }
