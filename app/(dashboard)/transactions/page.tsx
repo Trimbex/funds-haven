@@ -9,7 +9,6 @@ import { TransactionsProvider, useTransactions } from '@/app/context/transaction
 function TransactionsDebug() {
   const { transactions, isLoading, error } = useTransactions();
   
-  // No need to call fetchTransactions here as it's already being called in the context
 
   if (isLoading) return <div>Loading transactions...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -31,7 +30,7 @@ export default function Transactions() {
                 {/* <TransactionsHeader /> */}
                 <div className="container mx-auto py-10">
                     <TransactionsTable />
-                    <TransactionsDebug />
+                    {/* <TransactionsDebug /> */}
                 </div>
             </div>
         </TransactionsProvider>

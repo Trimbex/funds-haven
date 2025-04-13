@@ -1,6 +1,8 @@
 'use client'
-
+import DotLoader from "@/components/loader/loader";
 import * as React from 'react'
+import { useTransactions } from '@/app/context/transactionsContext'
+import { NewTransactionModal } from './components/new-transaction-modal'
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -203,6 +205,28 @@ export const columns: ColumnDef<Transaction>[] = [
       )
     },
   },
+  
+
+  {
+    accessorKey: 'recurring',
+    header: 'Recurring',
+    cell: ({ row }) => {
+      const recurring = row.getValue('recurring') as boolean
+      return recurring ? (
+        <Badge variant="outline" className="bg-blue-100">
+          Recurring
+        </Badge>
+      ) : null
+    },
+  },
+  {
+    accessorKey: 'account',
+    header: 'Account',
+    cell: ({ row }) => {
+      const account = row.getValue('account') as string
+      return account ? <div>{account}</div> : <div className="text-muted-foreground">-</div>
+    },
+  },
   {
     id: 'actions',
     enableHiding: false,
@@ -241,8 +265,36 @@ export function TransactionsTable() {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
+  const [showNewTransactionModal, setShowNewTransactionModal] = React.useState(false)
+
+  const { transactions, isLoading, error } = useTransactions()
+
+  const handleAddTransaction = () => {
+    setShowNewTransactionModal(true)
+  }
+
+  const transformedData = React.useMemo(() => {
+    // if (!transactions || transactions.length === 0) {  // TODO LATER
+    //   return data // Use dummy data if no real transactions
+    // }
+    
+    return transactions.map(transaction => ({
+      id: transaction.transaction_id,
+      date: transaction.transaction_date ? new Date(transaction.transaction_date).toISOString().split('T')[0] : '',
+      description: transaction.description || '',
+      category: transaction.categories && transaction.categories.length > 0 
+        ? transaction.categories.map(cat => cat.name).join(', ') 
+        : 'Uncategorized',
+      amount: transaction.amount,
+      type: transaction.transaction_type,
+      status: transaction.status,
+    recurring: transaction.recurring || false,
+    account: transaction.account_id || 'Cash'
+    }))
+  }, [transactions])
+
   const table = useReactTable({
-    data,
+    data: transformedData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -262,6 +314,23 @@ export function TransactionsTable() {
 
   return (
     <div className="w-full">
+
+      {isLoading ? <div className="h-screen flex items-center justify-center"><DotLoader/></div>: null}
+
+
+
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          Error loading transactions: {error}
+        </div>
+      )}
+
+      <NewTransactionModal 
+        isOpen={showNewTransactionModal} 
+        onClose={() => setShowNewTransactionModal(false)} 
+      />
+
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter descriptions..."
@@ -271,6 +340,12 @@ export function TransactionsTable() {
           }
           className="max-w-sm"
         />
+        <Button 
+          onClick={() => setShowNewTransactionModal(true)}
+          className="ml-4 bg-green-600 hover:bg-green-700 text-white"
+        >
+          New Transaction
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
