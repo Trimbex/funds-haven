@@ -1,8 +1,10 @@
 'use server';
 
 import { db } from '@/app/db';
-import { transactions } from '@/app/db/schema';
+import { recurrence_settings, transactions } from '@/app/db/schema';
 import { eq, and, desc, isNull } from 'drizzle-orm';
+import { isFloat64Array } from 'node:util/types';
+import { getRecurrenceSettings } from './recurrence';
 // import { v4 as uuidv4 } from 'uuid';
 
 // Type definitions
@@ -26,7 +28,8 @@ export type Transaction = {
   transaction_type: TransactionType;
   payment_method?: PaymentMethod;
   status: TransactionStatus;
-  recurring: boolean;
+  recurrence_id?: string | null;
+  parent_transation_id?: string | null;
   updated_at?: Date;
   created_at?: Date;
   deleted_at?: Date;
@@ -35,23 +38,69 @@ export type Transaction = {
 export type CreateTransactionInput = Omit<Transaction, 'transaction_id' | 'user_id' | 'created_at' | 'updated_at' | 'deleted_at'>;
 export type UpdateTransactionInput = Partial<Omit<Transaction, 'transaction_id' | 'user_id' | 'created_at' | 'updated_at' | 'deleted_at'>>;
 
+// export async function getTransactions(userId: string) {
+//   try {
+//     const result = await db.select()
+//       .from(transactions)
+//       .where(and(
+//         eq(transactions.user_id, userId),
+//         isNull(transactions.deleted_at)
+//       ))
+//       .orderBy(desc(transactions.transaction_date));
+
+//       let transactionsWithRecurrence = [...result];
+
+//      for (const transaction of result) {
+//       if(result[0]?.recurrence_id)
+//         {
+//            const recurrenceSettings = await getRecurrenceSettings(userId, result[0].recurrence_id);
+//           if(recurrenceSettings.success && recurrenceSettings.settings.recurrence_id === transaction.recurrence_id && !transaction.recurring)
+//             {
+//               transactionsWithRecurrence.push({
+//                 ...transaction,
+//                 recurrence: recurrenceSettings.settings,
+//               });
+//             }
+      
+           
+//         }
+       
+//      }
+    
+    
+    
+//     return { success: true, message: 'Transactions retrieved successfully', transactions: result };
+//   } catch (error) {
+//     console.error('Error fetching transactions:', error);
+//     return { success: false, message: 'Failed to fetch transactions', error: error instanceof Error ? error.message : String(error) };
+//   }
+// }
+
+
 export async function getTransactions(userId: string) {
   try {
     const result = await db.select()
-      .from(transactions)
-      .where(and(
+     .from(transactions)
+     .where(and(
         eq(transactions.user_id, userId),
         isNull(transactions.deleted_at)
       ))
-      .orderBy(desc(transactions.transaction_date));
-    
-    return { success: true, message: 'Transactions retrieved successfully', transactions: result };
-  } catch (error) {
-    console.error('Error fetching transactions:', error);
-    return { success: false, message: 'Failed to fetch transactions', error: error instanceof Error ? error.message : String(error) };
-  }
-}
+      
+      // .leftJoin(
+      //   recurrence_settings,
+      //   eq(transactions.recurrence_id, recurrence_settings.recurrence_id)
 
+      // )
+     .orderBy(desc(transactions.transaction_date));
+
+     return { success: true, message: 'Transactions retrieved successfully', transactions: result };
+
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      return { success: false, message: 'Failed to fetch transactions', error: error instanceof Error? error.message : String(error) }; 
+    }
+   
+}
 
 export async function addTransaction(userId: string, input: Omit<CreateTransactionInput, 'user_id'>) {
   try {

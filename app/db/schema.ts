@@ -58,10 +58,26 @@ export const transactions = t.pgTable('transactions', {
   transaction_type: t.text('transaction_type').notNull(), // 'income' or 'expense'
   payment_method: t.text('payment_method'), // e.g., 'cash', 'credit', 'debit'
   status: t.text('status').default('completed'), // 'completed', 'pending', 'failed'
-  recurring: t.boolean('recurring').default(false),
+ // recurring: t.boolean('recurring').default(false),
+  // recurring_period: t.text('recurring_period').default('none'), // 'none', 'weekly', 'monthly', 'annually'
+ // recurring_end_date: t.timestamp('recurring_end_date'), // Optional end date for recurring transactions
+
+    // Recurrence relationships
+    recurrence_id: t.uuid('recurrence_id').references(() => recurrence_settings.recurrence_id),
+    parent_transaction_id: t.uuid('parent_transaction_id').references((): any => transactions.transaction_id),
   updated_at: timestamps.updated_at,
   created_at: timestamps.created_at,
   deleted_at: timestamps.deleted_at,
+});
+
+export const recurrence_settings = t.pgTable('recurrence_settings', {
+  recurrence_id: t.uuid('id').primaryKey().defaultRandom().notNull(),
+  user_id: t.uuid('user_id').notNull().references(() => users.id),
+  frequency: t.text('frequency'), // 'weekly', 'monthly', 'yearly'
+  interval: t.integer('interval').default(1),
+  start_date: t.timestamp('start_date').defaultNow(),
+  end_date: t.timestamp('end_date'),
+  // ...timestamps
 });
 
 

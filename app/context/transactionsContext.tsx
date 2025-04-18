@@ -87,26 +87,26 @@ fetchUserID();
 
 
 
-useEffect(() => {
-  const addTestTransaction = async () => {
-    if (userID && transactions.length === 0) {
-      const testTransaction = {
-        amount: 100,
-        description: "Test Transaction",
-       transaction_date: new Date(),
-        transaction_type: "expense" as TransactionType,
-        categories: [{ id: null, name: "Test Category" }],
-        recurring: false,
-        status: "completed" as TransactionStatus
-      };
+// useEffect(() => {
+//   const addTestTransaction = async () => {
+//     if (userID && transactions.length === 0) {
+//       const testTransaction = {
+//         amount: 100,
+//         description: "Test Transaction",
+//        transaction_date: new Date(),
+//         transaction_type: "expense" as TransactionType,
+//         categories: [{ id: null, name: "Test Category" }],
+//         recurring: false,
+//         status: "completed" as TransactionStatus
+//       };
 
-      console.log("Adding test transaction:", testTransaction);
-      await addTransaction(userID, testTransaction);
-    }
-  };
+//       console.log("Adding test transaction:", testTransaction);
+//       await addTransaction(userID, testTransaction);
+//     }
+//   };
 
-  addTestTransaction();
-}, [transactions, userID]);
+//   addTestTransaction();
+// }, [transactions, userID]);
 
   // Fetch all transactions for a user
   const fetchTransactions = async (userId: string) => {
@@ -118,6 +118,7 @@ useEffect(() => {
       
       if (data.success) {
         setTransactions(data.transactions.transactions || []);
+        console.log(transactions)
       } else {
         setError(data.message || 'Failed to fetch transactions');
       }
