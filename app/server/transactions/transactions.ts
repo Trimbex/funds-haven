@@ -79,19 +79,48 @@ export type UpdateTransactionInput = Partial<Omit<Transaction, 'transaction_id' 
 
 export async function getTransactions(userId: string) {
   try {
-    const result = await db.select()
-     .from(transactions)
-     .where(and(
-        eq(transactions.user_id, userId),
-        isNull(transactions.deleted_at)
-      ))
+    // const result = await db.select()
+    //  .from(transactions)
+    //  .where(and(
+    //     eq(transactions.user_id, userId),
+    //     isNull(transactions.deleted_at)
+    //   ))
       
-      // .leftJoin(
-      //   recurrence_settings,
-      //   eq(transactions.recurrence_id, recurrence_settings.recurrence_id)
+    //   // .leftJoin(
+    //   //   recurrence_settings,
+    //   //   eq(transactions.recurrence_id, recurrence_settings.recurrence_id)
 
-      // )
-     .orderBy(desc(transactions.transaction_date));
+    //   // )
+    //  .orderBy(desc(transactions.transaction_date));
+
+    const result = await db
+    .select({
+      transaction_id: transactions.transaction_id,
+      amount: transactions.amount,
+      description: transactions.description,
+      transaction_date: transactions.transaction_date,
+      transaction_type: transactions.transaction_type,
+      payment_method: transactions.payment_method,
+      status: transactions.status,
+      categories: transactions.categories,
+      created_at: transactions.created_at,
+      updated_at: transactions.updated_at,
+      deleted_at: transactions.deleted_at,
+      recurrence_id: transactions.recurrence_id,
+
+      recurrence_frequency: recurrence_settings.frequency,
+      recurrence_interval: recurrence_settings.interval,
+      recurrence_start_date: recurrence_settings.start_date,
+      recurrence_end_date: recurrence_settings.end_date,
+    })
+    .from(transactions)
+    .leftJoin(
+      recurrence_settings,
+      eq(transactions.recurrence_id, recurrence_settings.recurrence_id)
+    )
+    .where(eq(transactions.user_id, userId));
+
+   
 
      return { success: true, message: 'Transactions retrieved successfully', transactions: result };
 

@@ -118,7 +118,7 @@ fetchUserID();
       
       if (data.success) {
         setTransactions(data.transactions.transactions || []);
-        console.log(transactions)
+       // console.log(data.transactions.transactions);
       } else {
         setError(data.message || 'Failed to fetch transactions');
       }

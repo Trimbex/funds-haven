@@ -15,7 +15,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Eye, RepeatIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -37,17 +37,27 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { TransactionDetailsModal } from './components/transaction-details-modal'
+
 
 // Define the Transaction type
 export type Transaction = {
   id: string
-  date: string
+  date: string | Date
   description: string
   category: string
   amount: number
   type: 'income' | 'expense'
   status: 'completed' | 'pending' | 'failed'
+  recurring: boolean
+  account: string
+  recurrence_id?: string | null
+  recurrence_frequency?: string
+  recurrence_interval?: number
+  recurrence_start_date?: Date | string
+  recurrence_end_date?: Date | string | null
 }
+
 
 // Sample data
 const data: Transaction[] = [
@@ -139,7 +149,12 @@ export const columns: ColumnDef<Transaction>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => <div>{row.getValue('description')}</div>,
+    cell: ({ row }) =>     <div className="flex items-center gap-2">
+    <span>{row.getValue('description')}</span>
+    {row.original.recurrence_id && (
+      <RepeatIcon size={16} className="text-blue-500 flex-shrink-0" />
+    )}
+  </div>,
   },
   {
     accessorKey: 'category',
@@ -207,18 +222,40 @@ export const columns: ColumnDef<Transaction>[] = [
   },
   
 
-  {
-    accessorKey: 'recurring',
-    header: 'Recurring',
-    cell: ({ row }) => {
-      const recurring = row.getValue('recurring') as boolean
-      return recurring ? (
-        <Badge variant="outline" className="bg-blue-100">
-          Recurring
-        </Badge>
-      ) : null
-    },
-  },
+  // {
+  //   accessorKey: 'recurring',
+  //   header: 'Recurring',
+  //   cell: ({ row }) => {
+  //     const [showRecurrenceDetails, setShowRecurrenceDetails] = React.useState(false)
+  //     const recurring = row.getValue('recurring') as boolean
+  //     const transaction = row.original
+      
+  //     if (!recurring && !transaction.recurrence_id) return null
+      
+  //     return (
+  //       <>
+  //         <Button 
+  //           variant="ghost" 
+  //           size="sm" 
+  //           onClick={() => setShowRecurrenceDetails(true)}
+  //           className="flex items-center gap-1 text-xs"
+  //         >
+  //           <RepeatIcon size={14} className="text-blue-500" />
+  //           <span className="text-blue-500">Details</span>
+  //         </Button>
+          
+  //         <RecurrenceDetailsModal
+  //           isOpen={showRecurrenceDetails}
+  //           onClose={() => setShowRecurrenceDetails(false)}
+  //           frequency={transaction.recurrence_frequency}
+  //           interval={transaction.recurrence_interval}
+  //           startDate={transaction.recurrence_start_date || transaction.date}
+  //           endDate={transaction.recurrence_end_date}
+  //         />
+  //       </>
+  //     )
+  //   },
+  // },
   {
     accessorKey: 'account',
     header: 'Account',
@@ -231,29 +268,41 @@ export const columns: ColumnDef<Transaction>[] = [
     id: 'actions',
     enableHiding: false,
     cell: ({ row }) => {
+      const [showDetails, setShowDetails] = React.useState(false)
       const transaction = row.original
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(transaction.id)}
-            >
-              Copy transaction ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View details</DropdownMenuItem>
-            <DropdownMenuItem>Edit transaction</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Delete transaction</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => setShowDetails(true)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(transaction.id)}
+              >
+                Copy transaction ID
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Edit transaction</DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600">Delete transaction</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <TransactionDetailsModal
+            isOpen={showDetails}
+            onClose={() => setShowDetails(false)}
+            transaction={transaction}
+          />
+        </>
       )
     },
   },
@@ -288,8 +337,14 @@ export function TransactionsTable() {
       amount: transaction.amount,
       type: transaction.transaction_type,
       status: transaction.status,
-    recurring: transaction.recurring || false,
-    account: transaction.account_id || 'Cash'
+      recurring: transaction.recurring || false,
+      account: transaction.account_id || 'Cash',
+      // Add recurrence details
+      recurrence_id: transaction.recurrence_id,
+      recurrence_frequency: transaction.recurrence_frequency,
+      recurrence_interval: transaction.recurrence_interval,
+      recurrence_start_date: transaction.recurrence_start_date,
+      recurrence_end_date: transaction.recurrence_end_date
     }))
   }, [transactions])
 
