@@ -19,8 +19,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select'
-import { AlertCircle, Trash, RefreshCw, Edit, X } from 'lucide-react'
+import { AlertCircle, Trash, RefreshCw, Edit, X, CreditCard } from 'lucide-react'
 import { useTransactions } from '@/app/context/transactionsContext'
+import { useAccounts } from '@/app/context/accountContext'
 import { Transaction } from '../transactions-table'
 import { CategorySelector } from './category-selector'
 import { TransactionCategory } from '@/app/server/transactions/transactions'
@@ -36,6 +37,7 @@ interface TransactionDetailsModalProps {
 
 export function TransactionDetailsModal({ isOpen, onClose, transaction }: TransactionDetailsModalProps) {
   const { userID, deleteTransaction, updateTransaction } = useTransactions()
+  const { accounts } = useAccounts()
   
   const [editMode, setEditMode] = useState(false)
   const [showRecurrenceModal, setShowRecurrenceModal] = useState(false)
@@ -57,6 +59,7 @@ export function TransactionDetailsModal({ isOpen, onClose, transaction }: Transa
       : new Date(transaction.date).toISOString().split('T')[0]
   )
   const [status, setStatus] = useState(transaction.status || 'completed')
+  const [accountId, setAccountId] = useState(transaction.account_id || '')
   
   const handleCategoryChange = (categories: TransactionCategory[]) => {
     setSelectedCategories(categories)
@@ -80,6 +83,7 @@ export function TransactionDetailsModal({ isOpen, onClose, transaction }: Transa
         : new Date(transaction.date).toISOString().split('T')[0]
     )
     setStatus(transaction.status || 'completed')
+    setAccountId(transaction.account_id || '')
     
     setEditMode(false)
     setError(null)
@@ -100,13 +104,29 @@ export function TransactionDetailsModal({ isOpen, onClose, transaction }: Transa
         throw new Error('Invalid amount')
       }
       
+      // Ensure we have a valid date object
+      let transactionDate;
+      try {
+        // Add time component to ensure valid ISO string format
+        transactionDate = new Date(date + 'T12:00:00Z')
+        
+        // Verify it's a valid date
+        if (isNaN(transactionDate.getTime())) {
+          throw new Error('Invalid date format')
+        }
+      } catch (err) {
+        console.error('Date parsing error:', err)
+        throw new Error('Invalid date format')
+      }
+      
       const result = await updateTransaction(transaction.id, userID, {
         description,
         amount: parsedAmount,
         categories: selectedCategories,
         transaction_type: type,
-        transaction_date: new Date(date),
-        status: status as 'completed' | 'pending' | 'failed'
+        transaction_date: transactionDate,
+        status: status as 'completed' | 'pending' | 'failed',
+        account_id: accountId === 'cash' ? accountId : (accountId || undefined)
       })
       
       if (result) {
@@ -354,6 +374,41 @@ export function TransactionDetailsModal({ isOpen, onClose, transaction }: Transa
                     </SelectContent>
                   </Select>
                 </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-account" className="text-right">
+                    Account
+                  </Label>
+                  <Select
+                    value={accountId}
+                    onValueChange={(value) => setAccountId(value)}
+                  >
+                    <SelectTrigger id="edit-account" className="col-span-3">
+                      <SelectValue placeholder="Select account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash/Other</SelectItem>
+                      {accounts && accounts.map((account) => (
+                        <SelectItem key={account.account_id} value={account.account_id}>
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4" />
+                            <span>{account.account_name}</span>
+                            {account.cardno && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground font-medium">
+                                  {account.card_company}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  ••••{account.cardno.slice(-4)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </>
             ) : (
               // View Details
@@ -429,7 +484,33 @@ export function TransactionDetailsModal({ isOpen, onClose, transaction }: Transa
                 {transaction.account && (
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label className="text-right font-medium">Account</Label>
-                    <div className="col-span-3">{transaction.account}</div>
+                    <div className="col-span-3">
+                      {transaction.account === 'Cash' ? (
+                        'Cash/Other'
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <div>{transaction.account}</div>
+                            {transaction.account_id && (
+                              <>
+                                {accounts.map(acc => {
+                                  if (acc.account_id === transaction.account_id) {
+                                    return (
+                                      <div key={acc.account_id} className="flex items-center gap-1 text-sm text-muted-foreground">
+                                        <span className="font-medium">{acc.card_company}</span>
+                                        {acc.cardno && <span>••••{acc.cardno.slice(-4)}</span>}
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                })}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </>

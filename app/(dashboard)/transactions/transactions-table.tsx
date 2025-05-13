@@ -83,6 +83,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { TransactionDetailsModal } from './components/transaction-details-modal'
 import { GenerateRecurrenceModal } from './components/generate-recurrence-modal'
+import { useAccounts } from '@/app/context/accountContext'
 
 // Icon mapping object
 const iconMap: { [key: string]: React.ReactNode } = {
@@ -118,6 +119,7 @@ export type Transaction = {
   status: 'completed' | 'pending' | 'failed'
   recurring: boolean
   account: string
+  account_id?: string
   recurrence_id?: string | null
   recurrence_frequency?: string
   recurrence_interval?: number
@@ -242,6 +244,7 @@ export function TransactionsTable() {
   })
 
   const { transactions, isLoading, error, categories } = useTransactions()
+  const { accounts } = useAccounts()
 
   const handleAddTransaction = () => {
     setShowNewTransactionModal(true)
@@ -287,7 +290,8 @@ export function TransactionsTable() {
         type: transaction.transaction_type,
         status: transaction.status,
         recurring: transaction.recurring || false,
-        account: transaction.account_id || 'Cash',
+        account: transaction.account_id === 'cash' || !transaction.account_id ? 'Cash' : transaction.account_id,
+        account_id: transaction.account_id,
         // Add recurrence details
         recurrence_id: transaction.recurrence_id,
         recurrence_frequency: transaction.recurrence_frequency,
@@ -542,8 +546,35 @@ export function TransactionsTable() {
       accessorKey: 'account',
       header: 'Account',
       cell: ({ row }) => {
-        const account = row.getValue('account') as string
-        return account ? <div>{account}</div> : <div className="text-muted-foreground">-</div>
+        const accountId = row.original.account_id
+        
+        if (!accountId) {
+          return <div className="text-muted-foreground">Cash/Other</div>
+        }
+        
+        // Find the account details if available
+        const accountDetails = accounts.find(acc => acc.account_id === accountId)
+        
+        if (!accountDetails) {
+          return <div>{row.getValue('account')}</div>
+        }
+        
+        return (
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <span>{accountDetails.account_name}</span>
+            {accountDetails.cardno && (
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground font-medium">
+                  {accountDetails.card_company}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  ••••{accountDetails.cardno.slice(-4)}
+                </span>
+              </div>
+            )}
+          </div>
+        )
       },
     },
     {

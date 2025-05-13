@@ -172,7 +172,6 @@ export async function addTransaction(userId: string, input: Omit<CreateTransacti
   // WHILE userId isn't needed, its just an additional security check
 export async function editTransaction(transactionId: string, userId: string, input: UpdateTransactionInput) {
   try {
-
     const existingTransaction = await db.select()
       .from(transactions)
       .where(and(
@@ -186,18 +185,43 @@ export async function editTransaction(transactionId: string, userId: string, inp
       return { success: false, message: 'Transaction not found or not authorized' };
     }
     
+    // Process input to ensure proper date handling
+    let processedInput = { ...input };
+    
+    // Safely handle transaction date
+    if (input.transaction_date !== undefined) {
+      try {
+        // If it's already a Date object, use it directly
+        if (input.transaction_date instanceof Date) {
+          processedInput.transaction_date = input.transaction_date;
+        } 
+        // If it's a string or other format, attempt conversion
+        else {
+          const parsedDate = new Date(input.transaction_date);
+          // Validate the date is valid
+          if (isNaN(parsedDate.getTime())) {
+            throw new Error('Invalid date format');
+          }
+          processedInput.transaction_date = parsedDate;
+        }
+      } catch (err) {
+        console.error('Error parsing transaction date:', err);
+        return { success: false, message: 'Invalid transaction date format', error: String(err) };
+      }
+    }
+    
     // Update the transaction
     const result = await db.update(transactions)
       .set({
-        account_id: input.account_id !== undefined ? input.account_id : existingTransaction[0].account_id,
-        categories: input.categories !== undefined ? input.categories : existingTransaction[0].categories,
-        amount: input.amount !== undefined ? input.amount : existingTransaction[0].amount,
-        description: input.description !== undefined ? input.description : existingTransaction[0].description,
-        transaction_date: input.transaction_date !== undefined ? input.transaction_date : existingTransaction[0].transaction_date,
-        transaction_type: input.transaction_type !== undefined ? input.transaction_type : existingTransaction[0].transaction_type,
-        payment_method: input.payment_method !== undefined ? input.payment_method : existingTransaction[0].payment_method,
-        status: input.status !== undefined ? input.status : existingTransaction[0].status,
-        recurring: input.recurring !== undefined ? input.recurring : existingTransaction[0].recurring,
+        account_id: processedInput.account_id !== undefined ? processedInput.account_id : existingTransaction[0].account_id,
+        categories: processedInput.categories !== undefined ? processedInput.categories : existingTransaction[0].categories,
+        amount: processedInput.amount !== undefined ? processedInput.amount : existingTransaction[0].amount,
+        description: processedInput.description !== undefined ? processedInput.description : existingTransaction[0].description,
+        transaction_date: processedInput.transaction_date !== undefined ? processedInput.transaction_date : existingTransaction[0].transaction_date,
+        transaction_type: processedInput.transaction_type !== undefined ? processedInput.transaction_type : existingTransaction[0].transaction_type,
+        payment_method: processedInput.payment_method !== undefined ? processedInput.payment_method : existingTransaction[0].payment_method,
+        status: processedInput.status !== undefined ? processedInput.status : existingTransaction[0].status,
+        recurring: processedInput.recurring !== undefined ? processedInput.recurring : existingTransaction[0].recurring,
         updated_at: new Date(),
       })
       .where(and(

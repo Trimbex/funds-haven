@@ -1,6 +1,7 @@
 import { Header } from "@/components/ui/header";
 import { Toaster } from "@/components/ui/sonner";
 import { Inter } from "next/font/google";
+import { AccountsProvider } from "@/app/context/accountContext";
 
 const inter = Inter({ subsets: ["latin"] }); // Load the Inter font
 
@@ -13,7 +14,9 @@ const DashboardLayout = ({ children }: Props) => {
     <>
       <Header />
       <main className={`${inter.className} min-h-screen`}>
-        {children}
+        <AccountsProvider>
+          {children}
+        </AccountsProvider>
         <Toaster richColors position="top-left" />
       </main>
     </>

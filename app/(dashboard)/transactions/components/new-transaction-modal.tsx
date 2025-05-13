@@ -20,8 +20,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useTransactions } from '@/app/context/transactionsContext'
+import { useAccounts } from '@/app/context/accountContext'
 import { CategorySelector } from './category-selector'
 import { TransactionCategory } from '@/app/server/transactions/transactions'
+import { CreditCard } from 'lucide-react'
 
 export function NewTransactionModal({
   isOpen,
@@ -35,10 +37,13 @@ export function NewTransactionModal({
   const [selectedCategories, setSelectedCategories] = useState<TransactionCategory[]>([])
   const [type, setType] = useState<'income' | 'expense'>('expense')
   const [date, setDate] = useState('')
+  const [status, setStatus] = useState<'completed' | 'pending' | 'failed'>('completed')
+  const [accountId, setAccountId] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const { addTransaction, userID } = useTransactions()
+  const { accounts } = useAccounts()
 
   useEffect(() => {
     // Set the current date as default when modal opens
@@ -82,7 +87,8 @@ export function NewTransactionModal({
         transaction_type: type,
         categories: selectedCategories,
         recurring: false,
-        status: 'completed' as const
+        status: status,
+        account_id: accountId === 'cash' ? accountId : (accountId || undefined)
       }
 
       console.log('Full transaction object:', JSON.stringify(newTransaction, null, 2)) 
@@ -96,6 +102,8 @@ export function NewTransactionModal({
         setSelectedCategories([])
         setType('expense')
         setDate(new Date().toISOString().split('T')[0])
+        setStatus('completed')
+        setAccountId('')
         onClose()
       } else {
         setError('Failed to add transaction')
@@ -196,6 +204,60 @@ export function NewTransactionModal({
                 className="col-span-3"
                 required
               />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="status" className="text-right">
+                Status
+              </Label>
+              <Select
+                value={status}
+                onValueChange={(value: 'completed' | 'pending' | 'failed') => setStatus(value)}
+              >
+                <SelectTrigger id="status" className="col-span-3">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="account" className="text-right">
+                Account
+              </Label>
+              <Select
+                value={accountId}
+                onValueChange={(value) => setAccountId(value)}
+              >
+                <SelectTrigger id="account" className="col-span-3">
+                  <SelectValue placeholder="Select account" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash/Other</SelectItem>
+                  {accounts && accounts.map((account) => (
+                    <SelectItem key={account.account_id} value={account.account_id}>
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="h-4 w-4" />
+                        <span>{account.account_name}</span>
+                        {account.cardno && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground font-medium">
+                              {account.card_company}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              ••••{account.cardno.slice(-4)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
