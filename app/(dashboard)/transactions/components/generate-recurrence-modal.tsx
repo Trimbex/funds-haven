@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { format } from 'date-fns'
 import { CalendarIcon, AlertCircle, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -37,6 +36,13 @@ export function GenerateRecurrenceModal({ isOpen, onClose, transaction }: Genera
     return null
   }
 
+  const handleClose = async () => {
+    if (userID) {
+      await fetchTransactions(userID);
+    }
+    onClose();
+  };
+
   const handleGenerateTransactions = async () => {
     if (!userID || !transaction.recurrence_id) {
       setError('Missing required information')
@@ -53,22 +59,6 @@ export function GenerateRecurrenceModal({ isOpen, onClose, transaction }: Genera
         ? transaction.date 
         : new Date(transaction.date)
 
-      // Determine if this is a parent or child transaction
-      const isParentTransaction = !transaction.parent_transaction_id;
-      console.log('Transaction info:', {
-        id: transaction.id,
-        isParent: isParentTransaction,
-        parentId: transaction.parent_transaction_id,
-        date: transactionDate.toISOString(),
-        account: transaction.account
-      });
-
-      // Only include account_id if it's a valid UUID (not 'Cash' or similar string)
-      let accountId = undefined;
-      if (transaction.account && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(transaction.account)) {
-        accountId = transaction.account;
-      }
-
       const response = await fetch('/api/recurrence', {
         method: 'PUT',
         headers: {
@@ -78,14 +68,14 @@ export function GenerateRecurrenceModal({ isOpen, onClose, transaction }: Genera
           user_id: userID,
           transaction_template: {
             transaction_id: transaction.id,
-            account_id: accountId, // Only include if it's a valid UUID
+            account_id: transaction.account,
             amount: transaction.amount,
             description: transaction.description,
-            transaction_date: transactionDate.toISOString(), // ensure proper ISO string format
+            transaction_date: transactionDate.toISOString(),
             transaction_type: transaction.type,
             categories: transaction.categoryData?.map(cat => ({ id: cat.id, name: cat.name })),
             status: transaction.status,
-            parent_transaction_id: transaction.parent_transaction_id || null, // Include parent ID if it exists
+            parent_transaction_id: transaction.parent_transaction_id || null,
           },
           recurrence_id: transaction.recurrence_id,
           generate_until: generateUntil.toISOString(),
@@ -97,7 +87,6 @@ export function GenerateRecurrenceModal({ isOpen, onClose, transaction }: Genera
       if (data.success) {
         setSuccess(true)
         setGeneratedCount(data.transactions.length)
-        // Refresh transactions list
         if (userID) {
           await fetchTransactions(userID)
         }
@@ -117,8 +106,10 @@ export function GenerateRecurrenceModal({ isOpen, onClose, transaction }: Genera
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[450px]">
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) handleClose();
+    }}>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Generate Recurring Transactions</DialogTitle>
           <DialogDescription>
@@ -156,29 +147,20 @@ export function GenerateRecurrenceModal({ isOpen, onClose, transaction }: Genera
 
             <div className="space-y-2 mb-4">
               <label className="text-sm font-medium">Generate until:</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !generateUntil && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {generateUntil ? format(generateUntil, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+              <div className="mt-2">
+                <p className="text-sm mb-2">Selected date: {format(generateUntil, "MMMM d, yyyy")}</p>
+                {/* Inline calendar with direct state management - no popover */}
+                <div className="border rounded-md p-2">
                   <Calendar
                     mode="single"
                     selected={generateUntil}
                     onSelect={(date) => date && setGenerateUntil(date)}
                     disabled={(date) => date < new Date()}
                     initialFocus
+                    className="mx-auto"
                   />
-                </PopoverContent>
-              </Popover>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -189,7 +171,7 @@ export function GenerateRecurrenceModal({ isOpen, onClose, transaction }: Genera
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={onClose}
+                onClick={handleClose}
                 disabled={isSubmitting}
               >
                 Cancel

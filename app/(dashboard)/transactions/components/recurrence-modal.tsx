@@ -35,7 +35,7 @@ interface RecurrenceModalProps {
 }
 
 export function RecurrenceModal({ isOpen, onClose, transactionId, transactionDate }: RecurrenceModalProps) {
-  const { userID } = useTransactions()
+  const { userID, fetchTransactions } = useTransactions()
   
   const [frequency, setFrequency] = useState<RecurrenceFrequency>('monthly')
   const [interval, setInterval] = useState<number>(1)
@@ -76,6 +76,12 @@ export function RecurrenceModal({ isOpen, onClose, transactionId, transactionDat
       
       if (data.success) {
         setSuccess(true);
+        
+        // Refresh transactions to show the changes immediately
+        if (userID) {
+          await fetchTransactions(userID);
+        }
+        
         setTimeout(() => {
           onClose();
         }, 1500);
@@ -172,11 +178,15 @@ export function RecurrenceModal({ isOpen, onClose, transactionId, transactionDat
                       {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 z-50" align="start">
                     <Calendar
                       mode="single"
                       selected={startDate}
-                      onSelect={(date) => date && setStartDate(date)}
+                      onSelect={(date) => {
+                        if (date) {
+                          setStartDate(date);
+                        }
+                      }}
                       initialFocus
                     />
                   </PopoverContent>
@@ -219,11 +229,15 @@ export function RecurrenceModal({ isOpen, onClose, transactionId, transactionDat
                         {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 z-50" align="start">
                       <Calendar
                         mode="single"
                         selected={endDate}
-                        onSelect={(date) => date && setEndDate(date)}
+                        onSelect={(date) => {
+                          if (date) {
+                            setEndDate(date);
+                          }
+                        }}
                         initialFocus
                         disabled={(date) => date < startDate}
                       />
