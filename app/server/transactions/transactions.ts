@@ -217,7 +217,11 @@ export async function editTransaction(transactionId: string, userId: string, inp
   }
 }
 
-export async function deleteTransaction(transactionId: string, userId: string) {
+export async function deleteTransaction(
+  transactionId: string, 
+  userId: string,
+  options?: { cascade?: boolean }
+) {
   try {
     // First, check if the transaction exists and belongs to the user
     const existingTransaction = await db.select()
@@ -231,6 +235,22 @@ export async function deleteTransaction(transactionId: string, userId: string) {
     
     if (existingTransaction.length === 0) {
       return { success: false, message: 'Transaction not found or not authorized' };
+    }
+
+    // Handle cascade delete for parent transactions if requested
+    if (options?.cascade && existingTransaction[0].recurrence_id && !existingTransaction[0].parent_transaction_id) {
+      console.log(`Cascade deleting instances of parent transaction: ${transactionId}`);
+      
+      // Soft delete all child transactions
+      await db.update(transactions)
+        .set({
+          deleted_at: new Date(),
+        })
+        .where(and(
+          eq(transactions.parent_transaction_id, transactionId),
+          eq(transactions.user_id, userId),
+          isNull(transactions.deleted_at)
+        ));
     }
     
     // Soft delete the transaction by setting deleted_at

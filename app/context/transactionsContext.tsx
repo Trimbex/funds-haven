@@ -41,7 +41,11 @@ interface TransactionsContextType {
       recurring?: boolean;
     }>
   ) => Promise<Transaction | null>;
-  deleteTransaction: (transactionId: string, userId: string) => Promise<boolean>;
+  deleteTransaction: (
+    transactionId: string,
+    userId: string,
+    options?: { cascade?: boolean }
+  ) => Promise<boolean>;
   filterTransactions: (filters: {
     type?: TransactionType;
     startDate?: Date;
@@ -246,36 +250,39 @@ fetchUserID();
   };
 
   // Delete a transaction
-  const deleteTransaction = async (transactionId: string, userId: string) => {
-    setIsLoading(true);
-    setError(null);
+  const deleteTransaction = async (
+    transactionId: string,
+    userId: string,
+    options?: { cascade?: boolean }
+  ) => {
+    if (!transactionId || !userId) {
+      return false;
+    }
+
     try {
-      const response = await fetch('/api/transactions', {
+      const response = await fetch(`/api/transactions/${transactionId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          transaction_id: transactionId,
           user_id: userId,
+          cascade: options?.cascade
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
-        setTransactions(prev => prev.filter(t => t.transaction_id !== transactionId));
+        await fetchTransactions(userId);
         return true;
       } else {
-        setError(data.message || 'Failed to delete transaction');
+        console.error('Failed to delete transaction:', data.message);
         return false;
       }
-    } catch (err) {
-      setError('An error occurred while deleting the transaction');
-      console.error(err);
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
       return false;
-    } finally {
-      setIsLoading(false);
     }
   };
 

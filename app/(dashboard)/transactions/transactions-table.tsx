@@ -229,6 +229,7 @@ export function TransactionsTable() {
   const [rowSelection, setRowSelection] = React.useState({})
   const [showNewTransactionModal, setShowNewTransactionModal] = useState<boolean>(false)
   const [highlightedTransaction, setHighlightedTransaction] = useState<string | null>(null)
+  const [searchingForParent, setSearchingForParent] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
   const [advancedFilters, setAdvancedFilters] = useState({
@@ -242,33 +243,11 @@ export function TransactionsTable() {
 
   const { transactions, isLoading, error, categories } = useTransactions()
 
-  // Function to scroll to and highlight a transaction
-  const scrollToTransaction = useCallback((transactionId: string) => {
-    setHighlightedTransaction(transactionId);
-    
-    // Allow time for the state to update before scrolling
-    setTimeout(() => {
-      const element = document.getElementById(`transaction-${transactionId}`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      
-      // Clear the highlight after a few seconds
-      setTimeout(() => {
-        setHighlightedTransaction(null);
-      }, 3000);
-    }, 100);
-  }, []);
-
   const handleAddTransaction = () => {
     setShowNewTransactionModal(true)
   }
 
   const transformedData = React.useMemo(() => {
-    // if (!transactions || transactions.length === 0) {  // TODO LATER
-    //   return data // Use dummy data if no real transactions
-    // }
-    
     return transactions.map(transaction => {
       // Process categories with their metadata
       const categoryData = transaction.categories && transaction.categories.length > 0 
@@ -412,8 +391,9 @@ export function TransactionsTable() {
     return Array.from(categorySet);
   }, [transformedData]);
 
-  // Define table columns inside the component
-  const tableColumns = [
+  // Define the columns
+  const columns = React.useMemo<ColumnDef<Transaction>[]>(() => [
+    // Date column
     {
       accessorKey: 'date',
       header: 'Date',
@@ -422,19 +402,18 @@ export function TransactionsTable() {
         return <div>{date.toLocaleDateString()}</div>
       },
     },
+    // Description column with parent link
     {
       accessorKey: 'description',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Description
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Description
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => {
         const isRecurringParent = !!row.original.recurrence_id && !row.original.parent_transaction_id;
         const isRecurringInstance = !!row.original.parent_transaction_id;
@@ -451,7 +430,7 @@ export function TransactionsTable() {
               <div className="flex items-center gap-1">
                 <span className="text-xs text-muted-foreground">(Instance)</span>
                 <button 
-                  className="text-blue-500 text-xs underline hover:text-blue-700 focus:outline-none"
+                  className="text-blue-500 text-xs underline hover:text-blue-700 focus:outline-none flex items-center gap-1"
                   onClick={(e) => {
                     e.stopPropagation();
                     const parentId = row.original.parent_transaction_id;
@@ -462,6 +441,9 @@ export function TransactionsTable() {
                   title="View parent transaction"
                 >
                   View Parent
+                  {searchingForParent === row.original.parent_transaction_id && (
+                    <span className="ml-1 animate-spin">⟳</span>
+                  )}
                 </button>
                 <RepeatIcon size={14} className="text-gray-400 flex-shrink-0" title="Generated instance" />
               </div>
@@ -470,6 +452,7 @@ export function TransactionsTable() {
         );
       },
     },
+    // Other columns
     {
       accessorKey: 'category',
       header: 'Category',
@@ -500,17 +483,15 @@ export function TransactionsTable() {
     },
     {
       accessorKey: 'amount',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Amount
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Amount
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => {
         const amount = parseFloat(row.getValue('amount'))
         const type = row.original.type
@@ -624,11 +605,11 @@ export function TransactionsTable() {
         )
       },
     },
-  ]
+  ], [searchingForParent]);
 
   const table = useReactTable({
     data: filteredData,
-    columns: tableColumns, // Reference the locally defined columns
+    columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -645,7 +626,75 @@ export function TransactionsTable() {
     },
   })
 
-  // Calculate counts
+  // Function to scroll to and highlight a transaction, navigating through pages if needed
+  const scrollToTransaction = useCallback(async (transactionId: string) => {
+    // First check if transaction is on current page
+    const isOnCurrentPage = table.getRowModel().rows.some(row => row.original.id === transactionId);
+    
+    if (isOnCurrentPage) {
+      // If it's on the current page, highlight and scroll to it
+      setHighlightedTransaction(transactionId);
+      
+      // Allow time for the state to update before scrolling
+      setTimeout(() => {
+        const element = document.getElementById(`transaction-${transactionId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Clear the highlight after a few seconds
+        setTimeout(() => {
+          setHighlightedTransaction(null);
+        }, 3000);
+      }, 100);
+    } else {
+      // Set searching state to show loading indicator
+      setSearchingForParent(transactionId);
+      
+      // Not on current page, navigate through pages to find it
+      let foundOnPage = false;
+      let totalPages = table.getPageCount();
+      let currentPage = 0;
+      
+      while (currentPage < totalPages && !foundOnPage) {
+        table.setPageIndex(currentPage);
+        
+        // Give time for the page to update
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Check if transaction is on this page
+        foundOnPage = table.getRowModel().rows.some(row => row.original.id === transactionId);
+        
+        if (!foundOnPage) {
+          currentPage++;
+        }
+      }
+      
+      // Clear searching state
+      setSearchingForParent(null);
+      
+      if (foundOnPage) {
+        // Found it, now highlight and scroll
+        setHighlightedTransaction(transactionId);
+        
+        setTimeout(() => {
+          const element = document.getElementById(`transaction-${transactionId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          
+          setTimeout(() => {
+            setHighlightedTransaction(null);
+          }, 3000);
+        }, 100);
+      } else {
+        // If not found, show an alert
+        alert("Couldn't find the parent transaction. It might have been deleted.");
+      }
+    }
+  }, [table]);
+
+  // Calculate counts for filter summary
   const totalTransactions = filteredData.length;
   const incomeCount = filteredData.filter(t => t.type === 'income').length;
   const expenseCount = filteredData.filter(t => t.type === 'expense').length;
@@ -1006,7 +1055,7 @@ export function TransactionsTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={tableColumns.length} className="h-24 text-center">
+                <TableCell colSpan={table.getAllColumns().length} className="h-24 text-center">
                   No transactions found.
                 </TableCell>
               </TableRow>

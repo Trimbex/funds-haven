@@ -26,6 +26,7 @@ import { CategorySelector } from './category-selector'
 import { TransactionCategory } from '@/app/server/transactions/transactions'
 import { Badge } from '@/components/ui/badge'
 import { RecurrenceModal } from './recurrence-modal'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface TransactionDetailsModalProps {
   isOpen: boolean
@@ -41,6 +42,7 @@ export function TransactionDetailsModal({ isOpen, onClose, transaction }: Transa
   const [deleteConfirmation, setDeleteConfirmation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [cascadeDelete, setCascadeDelete] = useState(true)
   
   // Edit state
   const [description, setDescription] = useState(transaction.description || '')
@@ -131,7 +133,11 @@ export function TransactionDetailsModal({ isOpen, onClose, transaction }: Transa
     setError(null)
     
     try {
-      const result = await deleteTransaction(transaction.id, userID)
+      const options = transaction.recurrence_id && !transaction.parent_transaction_id
+        ? { cascade: cascadeDelete }
+        : undefined;
+        
+      const result = await deleteTransaction(transaction.id, userID, options)
       
       if (result) {
         onClose()
@@ -179,6 +185,8 @@ export function TransactionDetailsModal({ isOpen, onClose, transaction }: Transa
     return text
   }
   
+  const isRecurringParent = transaction.recurrence_id && !transaction.parent_transaction_id;
+  
   return (
     <>
       <Dialog open={isOpen} onOpenChange={() => {
@@ -204,6 +212,23 @@ export function TransactionDetailsModal({ isOpen, onClose, transaction }: Transa
             <Alert variant="destructive" className="mb-4">
               <div className="flex flex-col items-center w-full">
                 <p className="mb-2">Are you sure you want to delete this transaction?</p>
+                
+                {isRecurringParent && (
+                  <div className="flex items-center mb-3 space-x-2">
+                    <Checkbox 
+                      id="cascade-delete" 
+                      checked={cascadeDelete} 
+                      onCheckedChange={(checked) => setCascadeDelete(checked === true)}
+                    />
+                    <label 
+                      htmlFor="cascade-delete" 
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Also delete all instances of this recurring transaction
+                    </label>
+                  </div>
+                )}
+                
                 <div className="flex gap-2">
                   <Button 
                     variant="outline" 
@@ -467,11 +492,7 @@ export function TransactionDetailsModal({ isOpen, onClose, transaction }: Transa
           isOpen={showRecurrenceModal}
           onClose={() => setShowRecurrenceModal(false)}
           transactionId={transaction.id}
-          transactionDate={
-            transaction.date instanceof Date 
-              ? transaction.date 
-              : new Date(transaction.date)
-          }
+          transactionDate={transaction.date instanceof Date ? transaction.date : new Date(transaction.date)}
         />
       )}
     </>
