@@ -10,6 +10,7 @@ interface TransactionsContextType {
   isLoading: boolean;
   error: string | null;
   userID: string | null;
+  categories: any[];
   fetchTransactions: (userId: string) => Promise<void>;
   addTransaction: (
     userId: string,
@@ -61,6 +62,7 @@ export const TransactionsProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [userID, setUserID] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
 
@@ -119,8 +121,17 @@ fetchUserID();
       if (data.success) {
         setTransactions(data.transactions.transactions || []);
        // console.log(data.transactions.transactions);
-      } else {
+      } 
+      else {
         setError(data.message || 'Failed to fetch transactions');
+      }
+
+      //Category fetching
+      const responseCat = await fetch(`/api/categories?user_id=${userId}`)
+      const dataCat = await responseCat.json();
+      
+      if (dataCat.success) {
+        setCategories(dataCat.categories || []);
       }
     } catch (err) {
       setError('An error occurred while fetching transactions');
@@ -325,6 +336,7 @@ fetchUserID();
     isLoading,
     error,
     userID,
+    categories,
     fetchTransactions,
     addTransaction,
     updateTransaction,

@@ -20,6 +20,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useTransactions } from '@/app/context/transactionsContext'
+import { CategorySelector } from './category-selector'
+import { TransactionCategory } from '@/app/server/transactions/transactions'
 
 export function NewTransactionModal({
   isOpen,
@@ -30,7 +32,7 @@ export function NewTransactionModal({
 }) {
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState('')
+  const [selectedCategories, setSelectedCategories] = useState<TransactionCategory[]>([])
   const [type, setType] = useState<'income' | 'expense'>('expense')
   const [date, setDate] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -38,6 +40,14 @@ export function NewTransactionModal({
 
   const { addTransaction, userID } = useTransactions()
 
+  useEffect(() => {
+    // Set the current date as default when modal opens
+    setDate(new Date().toISOString().split('T')[0])
+  }, [isOpen])
+
+  const handleCategoryChange = (categories: TransactionCategory[]) => {
+    setSelectedCategories(categories)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,6 +57,11 @@ export function NewTransactionModal({
     try {
       if (!userID) {
         throw new Error('User ID not found')
+      }
+
+      // Check if at least one category is selected
+      if (selectedCategories.length === 0) {
+        throw new Error('Please select at least one category')
       }
 
       // Ensure we have a valid date string
@@ -65,7 +80,7 @@ export function NewTransactionModal({
         description,
         transaction_date: transactionDate, // Send as ISO string
         transaction_type: type,
-        categories: [{ id: null, name: category }],
+        categories: selectedCategories,
         recurring: false,
         status: 'completed' as const
       }
@@ -78,15 +93,15 @@ export function NewTransactionModal({
         // Reset form and close modal
         setDescription('')
         setAmount('')
-        setCategory('')
+        setSelectedCategories([])
         setType('expense')
         setDate(new Date().toISOString().split('T')[0])
         onClose()
       } else {
         setError('Failed to add transaction')
       }
-    } catch (err) {
-      setError('An error occurred while adding the transaction')
+    } catch (err: any) {
+      setError(err.message || 'An error occurred while adding the transaction')
       console.error(err)
     } finally {
       setIsSubmitting(false)
@@ -161,13 +176,12 @@ export function NewTransactionModal({
               <Label htmlFor="category" className="text-right">
                 Category
               </Label>
-              <Input
-                id="category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="col-span-3"
-                required
-              />
+              <div className="col-span-3">
+                <CategorySelector 
+                  selectedCategories={selectedCategories}
+                  onChange={handleCategoryChange}
+                />
+              </div>
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
