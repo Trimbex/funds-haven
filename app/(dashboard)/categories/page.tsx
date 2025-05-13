@@ -2,15 +2,15 @@
 
 import React from 'react';
 import { motion } from "framer-motion";
-import Header  from './components/header'
 import CategoryCard from './components/category-card';
 import { CategoryProvider, useCategories } from '@/app/context/categoryContext';
 import DotLoader from "@/components/loader/loader";
 import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
-import  CategoryForm  from './components/category-form';
+import { Plus, Search, Layers, TrendingUp, PiggyBank, Wallet } from "lucide-react";
+import CategoryForm from './components/category-form';
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import DashboardHeader, { StatCard } from '@/app/components/DashboardHeader';
 
 function CategoriesPage() {
   const { categories, isLoading, addCategory } = useCategories();
@@ -40,11 +40,64 @@ function CategoriesPage() {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount)
+  }
+
+  const stats = {
+    totalCategories: categories.length,
+    totalBudget: categories.reduce((sum, cat) => sum + Number(cat.budget), 0),
+    activeCategories: categories.filter(cat => Number(cat.budget) > 0).length,
+    totalSpent: categories.reduce((sum, cat) => sum + Number(cat.spent), 0),
+  };
+
+  const statCards: StatCard[] = [
+    {
+      title: 'Total Categories',
+      value: stats.totalCategories,
+      description: 'Custom and system categories',
+      icon: Layers,
+      iconColor: 'text-purple-300',
+      iconBgColor: 'bg-purple-500'
+    },
+    {
+      title: 'Active Categories',
+      value: stats.activeCategories,
+      description: 'Categories with budget set',
+      icon: TrendingUp,
+      iconColor: 'text-green-300',
+      iconBgColor: 'bg-green-500'
+    },
+    {
+      title: 'Total Budget',
+      value: formatCurrency(stats.totalBudget),
+      description: 'Allocated budget across all categories',
+      icon: PiggyBank,
+      iconColor: 'text-blue-300',
+      iconBgColor: 'bg-blue-500'
+    },
+    {
+      title: 'Total Spent',
+      value: formatCurrency(stats.totalSpent),
+      description: 'Amount spent across categories',
+      icon: Wallet,
+      iconColor: 'text-orange-300',
+      iconBgColor: 'bg-orange-500'
+    }
+  ];
+
   return (
     <>
       {isLoading ? <div className="h-screen flex items-center justify-center"><DotLoader/></div> :  
         <>
-          <Header />
+          <DashboardHeader
+            title="Categories Overview"
+            subtitle="Organize your finances with customized categories"
+            stats={statCards}
+          />
           
           <div className="container mx-auto px-6 py-4">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm">
@@ -110,11 +163,6 @@ function CategoriesPage() {
                     ? "No categories match your search criteria" 
                     : "Get started by adding your first category"}
                 </p>
-                {/* {!searchQuery && (
-                  <Button onClick={() => setIsFormOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" /> Add Category
-                  </Button>
-                )} */}
               </div>
             )}
           </div>

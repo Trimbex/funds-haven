@@ -290,7 +290,9 @@ export function TransactionsTable() {
         type: transaction.transaction_type,
         status: transaction.status,
         recurring: transaction.recurring || false,
-        account: transaction.account_id === 'cash' || !transaction.account_id ? 'Cash' : transaction.account_id,
+        account: transaction.account_id === 'cash' || !transaction.account_id 
+          ? 'Cash' 
+          : accounts.find(acc => acc.account_id === transaction.account_id)?.account_name || 'Unknown Account',
         account_id: transaction.account_id,
         // Add recurrence details
         recurrence_id: transaction.recurrence_id,
@@ -301,7 +303,7 @@ export function TransactionsTable() {
         parent_transaction_id: transaction.parent_transaction_id
       }
     })
-  }, [transactions, categories])
+  }, [transactions, categories, accounts])
 
   // Apply advanced filters to the data
   const filteredData = React.useMemo(() => {

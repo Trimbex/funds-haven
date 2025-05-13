@@ -1,30 +1,11 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { TransactionsTable } from './transactions-table'
-import { TransactionsProvider, useTransactions } from '@/app/context/transactionsContext'
-import DashboardHeader, { StatCard } from '@/app/components/DashboardHeader'
 import { ArrowUpRight, ArrowDownRight, Wallet, Calendar } from 'lucide-react'
+import { useTransactions } from '@/app/context/transactionsContext'
+import DashboardHeader, { StatCard } from '@/app/components/DashboardHeader'
 
-// Debug component to display transactions
-function TransactionsDebug() {
-  const { transactions, isLoading, error } = useTransactions();
-  
-
-  if (isLoading) return <div>Loading transactions...</div>;
-  if (error) return <div>Error: {error}</div>;
-  
-  return (
-    <div className="mt-4 p-4 bg-gray-100 rounded-md">
-      <h3 className="text-lg font-medium mb-2">Transactions Debug View:</h3>
-      <pre className="whitespace-pre-wrap text-xs overflow-auto max-h-96">
-        {JSON.stringify(transactions, null, 2)}
-      </pre>
-    </div>
-  );
-}
-
-function TransactionsContent() {
+export function TransactionsHeader() {
   const { transactions, isLoading } = useTransactions()
   const [stats, setStats] = useState({
     totalTransactions: 0,
@@ -106,24 +87,10 @@ function TransactionsContent() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="container mx-auto py-10">
-        <DashboardHeader
-          title="Transaction Overview"
-          subtitle="Manage your income and expenses efficiently"
-          stats={statCards}
-        />
-        <TransactionsTable />
-        {/* <TransactionsDebug /> */}
-      </div>
-    </div>
-  );
-}
-
-export default function Transactions() {
-  return (
-    <TransactionsProvider>
-      <TransactionsContent />
-    </TransactionsProvider>
+    <DashboardHeader
+      title="Transaction Overview"
+      subtitle="Manage your income and expenses efficiently"
+      stats={statCards}
+    />
   )
-}
+} 
