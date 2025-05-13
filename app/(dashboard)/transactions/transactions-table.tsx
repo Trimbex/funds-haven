@@ -15,7 +15,26 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Eye, RepeatIcon } from 'lucide-react'
+import { 
+  ArrowUpDown, 
+  ChevronDown, 
+  MoreHorizontal, 
+  Eye, 
+  RepeatIcon, 
+  Tag, 
+  CreditCard, 
+  ShoppingCart, 
+  Home, 
+  Utensils, 
+  Car, 
+  Gift, 
+  Briefcase, 
+  Heart, 
+  Plane, 
+  Book, 
+  DollarSign 
+} from 'lucide-react'
+import Image from 'next/image'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -38,7 +57,23 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { TransactionDetailsModal } from './components/transaction-details-modal'
+import { GenerateRecurrenceModal } from './components/generate-recurrence-modal'
 
+// Icon mapping object
+const iconMap: { [key: string]: React.ReactNode } = {
+  "Tag": <Tag />,
+  "CreditCard": <CreditCard />,
+  "ShoppingCart": <ShoppingCart />,
+  "Home": <Home />,
+  "Utensils": <Utensils />,
+  "Car": <Car />,
+  "Gift": <Gift />,
+  "Briefcase": <Briefcase />,
+  "Heart": <Heart />,
+  "Plane": <Plane />,
+  "Book": <Book />,
+  "DollarSign": <DollarSign />
+}
 
 // Define the Transaction type
 export type Transaction = {
@@ -46,6 +81,13 @@ export type Transaction = {
   date: string | Date
   description: string
   category: string
+  categoryData: Array<{
+    id: string | null
+    name: string
+    color: string
+    image?: string
+    icon?: string
+  }>
   amount: number
   type: 'income' | 'expense'
   status: 'completed' | 'pending' | 'failed'
@@ -56,8 +98,8 @@ export type Transaction = {
   recurrence_interval?: number
   recurrence_start_date?: Date | string
   recurrence_end_date?: Date | string | null
+  parent_transaction_id?: string | null
 }
-
 
 // Sample data
 const data: Transaction[] = [
@@ -126,6 +168,35 @@ const data: Transaction[] = [
   },
 ]
 
+// Helper function to render category icon
+const renderCategoryIcon = (category: any, size = 'small') => {
+  // First try to use the icon if available
+  if (category.icon && iconMap[category.icon]) {
+    return React.cloneElement(iconMap[category.icon] as React.ReactElement, { 
+      className: size === 'small' ? "h-2 w-2" : "h-3 w-3",
+      color: "currentColor"
+    });
+  } 
+  // Then fall back to image if available
+  else if (category.image) {
+    return (
+      <div className={size === 'small' ? "w-2 h-2" : "w-3 h-3"}>
+        <Image 
+          src={category.image} 
+          alt="" 
+          width={size === 'small' ? 8 : 12} 
+          height={size === 'small' ? 8 : 12} 
+          className="object-contain"
+        />
+      </div>
+    );
+  }
+  // Finally, use a default tag icon
+  else {
+    return <Tag className={size === 'small' ? "h-2 w-2" : "h-3 w-3"} />;
+  }
+};
+
 // Define the columns
 export const columns: ColumnDef<Transaction>[] = [
   {
@@ -149,17 +220,55 @@ export const columns: ColumnDef<Transaction>[] = [
         </Button>
       )
     },
-    cell: ({ row }) =>     <div className="flex items-center gap-2">
-    <span>{row.getValue('description')}</span>
-    {row.original.recurrence_id && (
-      <RepeatIcon size={16} className="text-blue-500 flex-shrink-0" />
-    )}
-  </div>,
+    cell: ({ row }) => {
+      const isRecurringParent = !!row.original.recurrence_id && !row.original.parent_transaction_id;
+      const isRecurringInstance = !!row.original.parent_transaction_id;
+      
+      return (
+        <div className="flex items-center gap-2">
+          <span>{row.getValue('description')}</span>
+          {isRecurringParent && (
+            <div className="flex items-center">
+              <RepeatIcon size={16} className="text-blue-500 flex-shrink-0" title="Recurring parent transaction" />
+            </div>
+          )}
+          {isRecurringInstance && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground">(Instance)</span>
+              <RepeatIcon size={14} className="text-gray-400 flex-shrink-0" title="Generated instance" />
+            </div>
+          )}
+        </div>
+      );
+    },
   },
   {
     accessorKey: 'category',
     header: 'Category',
-    cell: ({ row }) => <div>{row.getValue('category')}</div>,
+    cell: ({ row }) => {
+      const categoryData = row.original.categoryData || []
+      
+      if (categoryData.length === 0) {
+        return <div className="text-muted-foreground">Uncategorized</div>
+      }
+      
+      return (
+        <div className="flex flex-wrap gap-1">
+          {categoryData.map((cat, index) => (
+            <Badge
+              key={index}
+              style={{ backgroundColor: cat.color || '#e5e7eb' }}
+              className="flex items-center gap-1 px-2 py-1 text-xs"
+            >
+              <span className="mr-1 flex-shrink-0">
+                {renderCategoryIcon(cat)}
+              </span>
+              {cat.name}
+            </Badge>
+          ))}
+        </div>
+      )
+    },
   },
   {
     accessorKey: 'amount',
@@ -269,6 +378,7 @@ export const columns: ColumnDef<Transaction>[] = [
     enableHiding: false,
     cell: ({ row }) => {
       const [showDetails, setShowDetails] = React.useState(false)
+      const [showGenerateModal, setShowGenerateModal] = React.useState(false)
       const transaction = row.original
 
       return (
@@ -289,11 +399,19 @@ export const columns: ColumnDef<Transaction>[] = [
               <DropdownMenuItem
                 onClick={() => navigator.clipboard.writeText(transaction.id)}
               >
-                Copy transaction ID
+                <ArrowUpDown className="mr-2 h-4 w-4" />
+                Copy ID
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Edit transaction</DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">Delete transaction</DropdownMenuItem>
+              {transaction.recurrence_id && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Recurrence</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setShowGenerateModal(true)}>
+                    <RepeatIcon className="mr-2 h-4 w-4 text-blue-500" />
+                    Generate instances
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
           
@@ -302,6 +420,14 @@ export const columns: ColumnDef<Transaction>[] = [
             onClose={() => setShowDetails(false)}
             transaction={transaction}
           />
+          
+          {showGenerateModal && (
+            <GenerateRecurrenceModal
+              isOpen={showGenerateModal}
+              onClose={() => setShowGenerateModal(false)}
+              transaction={transaction}
+            />
+          )}
         </>
       )
     },
@@ -316,7 +442,7 @@ export function TransactionsTable() {
 
   const [showNewTransactionModal, setShowNewTransactionModal] = React.useState(false)
 
-  const { transactions, isLoading, error } = useTransactions()
+  const { transactions, isLoading, error, categories } = useTransactions()
 
   const handleAddTransaction = () => {
     setShowNewTransactionModal(true)
@@ -327,26 +453,56 @@ export function TransactionsTable() {
     //   return data // Use dummy data if no real transactions
     // }
     
-    return transactions.map(transaction => ({
-      id: transaction.transaction_id,
-      date: transaction.transaction_date ? new Date(transaction.transaction_date) : '',
-      description: transaction.description || '',
-      category: transaction.categories && transaction.categories.length > 0 
-        ? transaction.categories.map(cat => cat.name).join(', ') 
-        : 'Uncategorized',
-      amount: transaction.amount,
-      type: transaction.transaction_type,
-      status: transaction.status,
-      recurring: transaction.recurring || false,
-      account: transaction.account_id || 'Cash',
-      // Add recurrence details
-      recurrence_id: transaction.recurrence_id,
-      recurrence_frequency: transaction.recurrence_frequency,
-      recurrence_interval: transaction.recurrence_interval,
-      recurrence_start_date: transaction.recurrence_start_date,
-      recurrence_end_date: transaction.recurrence_end_date
-    }))
-  }, [transactions])
+    return transactions.map(transaction => {
+      // Process categories with their metadata
+      const categoryData = transaction.categories && transaction.categories.length > 0 
+        ? transaction.categories.map(cat => {
+            if (cat.id) {
+              // Find the full category data from the categories context
+              const fullCategory = categories.find(c => c.category_id === cat.id);
+              return {
+                id: cat.id,
+                name: cat.name,
+                color: fullCategory?.color || '#e5e7eb',
+                image: fullCategory?.image,
+                icon: fullCategory?.icon
+              };
+            } else {
+              // Custom category without ID
+              return {
+                id: null,
+                name: cat.name,
+                color: '#e5e7eb',
+                image: undefined,
+                icon: undefined
+              };
+            }
+          })
+        : [];
+
+      return {
+        id: transaction.transaction_id,
+        date: transaction.transaction_date ? new Date(transaction.transaction_date) : '',
+        description: transaction.description || '',
+        category: transaction.categories && transaction.categories.length > 0 
+          ? transaction.categories.map(cat => cat.name).join(', ') 
+          : 'Uncategorized',
+        categoryData,
+        amount: transaction.amount,
+        type: transaction.transaction_type,
+        status: transaction.status,
+        recurring: transaction.recurring || false,
+        account: transaction.account_id || 'Cash',
+        // Add recurrence details
+        recurrence_id: transaction.recurrence_id,
+        recurrence_frequency: transaction.recurrence_frequency,
+        recurrence_interval: transaction.recurrence_interval,
+        recurrence_start_date: transaction.recurrence_start_date,
+        recurrence_end_date: transaction.recurrence_end_date,
+        parent_transaction_id: transaction.parent_transaction_id
+      }
+    })
+  }, [transactions, categories])
 
   const table = useReactTable({
     data: transformedData,

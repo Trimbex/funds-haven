@@ -45,24 +45,22 @@ export async function getRecurrenceSettings(recurrenceId: string, userId: string
 }
 
 export async function createRecurrenceSettings(userId: string, transactionId: string, input: CreateRecurrenceInput) {
-    try{
-
-    const existingTransaction = await db.select()
-      .from(transactions)
-      .where(and(
-        eq(transactions.transaction_id, transactionId),
-        eq(transactions.user_id, userId),
-        isNull(transactions.deleted_at)
-      ))
-      .limit(1);
-    
-    if (existingTransaction.length === 0) {
-      return { success: false, message: 'Transaction not found or not authorized' };
-    }
+    try {
+        const existingTransaction = await db.select()
+          .from(transactions)
+          .where(and(
+            eq(transactions.transaction_id, transactionId),
+            eq(transactions.user_id, userId),
+            isNull(transactions.deleted_at)
+          ))
+          .limit(1);
+        
+        if (existingTransaction.length === 0) {
+          return { success: false, message: 'Transaction not found or not authorized' };
+        }
 
         const recurrenceResult = await db.insert(recurrence_settings).values({
             user_id: userId,
-            transaction_id: transactionId,
             frequency: input.frequency,
             interval: input.interval || 1,
             start_date: input.start_date || new Date(),
@@ -75,27 +73,37 @@ export async function createRecurrenceSettings(userId: string, transactionId: st
         }
 
 
-    // Update the transaction to link it with the recurrence settings
+        // Update the transaction to link it with the recurrence settings
         const updateResult = await db.update(transactions)
-        .set({
-        recurrence_id: recurrenceResult[0].recurrence_id,
-        updated_at: new Date(),
-        })
-        .where(eq(transactions.transaction_id, transactionId))
-        .returning();
+          .set({
+            recurrence_id: recurrenceResult[0].recurrence_id,
+            updated_at: new Date(),
+          })
+          .where(eq(transactions.transaction_id, transactionId))
+          .returning();
 
-    if (updateResult.length === 0) {
-        // Rollback recurrence settings creation if transaction update fails
-        await db.delete(recurrence_settings)
-        .where(eq(recurrence_settings.recurrence_id, recurrenceResult[0].recurrence_id));
+        if (updateResult.length === 0) {
+            // Rollback recurrence settings creation if transaction update fails
+            await db.delete(recurrence_settings)
+              .where(eq(recurrence_settings.recurrence_id, recurrenceResult[0].recurrence_id));
+            
+            return { success: false, message: 'Failed to link transaction with recurrence settings' };
+        }
         
-        return { success: false, message: 'Failed to link transaction with recurrence settings' };
-    }
+        return { 
+          success: true, 
+          message: 'Recurrence settings created successfully', 
+          recurrence: recurrenceResult[0],
+          transaction: updateResult[0]
+        };
     } 
     catch (error) {
         console.error('Error creating recurrence:', error);
-        throw error;
+        return { 
+          success: false, 
+          message: 'Error creating recurrence settings', 
+          error: error instanceof Error ? error.message : String(error) 
+        };
     }
-    
 }
 

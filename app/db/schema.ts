@@ -41,6 +41,7 @@ export const categories = t.pgTable('categories',{
   color: t.text('color').default('gray'),
   predefined: t.boolean('predefined').default(true),
   image: t.text('image'),
+  icon: t.text('icon'),
   user_id: t.uuid('user_id').notNull().references(() => users.id),
   recurring: t.boolean('recurring').default(false),
  

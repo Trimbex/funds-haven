@@ -29,7 +29,7 @@ export type Transaction = {
   payment_method?: PaymentMethod;
   status: TransactionStatus;
   recurrence_id?: string | null;
-  parent_transation_id?: string | null;
+  parent_transaction_id?: string | null;
   updated_at?: Date;
   created_at?: Date;
   deleted_at?: Date;
@@ -96,6 +96,7 @@ export async function getTransactions(userId: string) {
     const result = await db
     .select({
       transaction_id: transactions.transaction_id,
+      account_id: transactions.account_id,
       amount: transactions.amount,
       description: transactions.description,
       transaction_date: transactions.transaction_date,
@@ -107,6 +108,7 @@ export async function getTransactions(userId: string) {
       updated_at: transactions.updated_at,
       deleted_at: transactions.deleted_at,
       recurrence_id: transactions.recurrence_id,
+      parent_transaction_id: transactions.parent_transaction_id,
 
       recurrence_frequency: recurrence_settings.frequency,
       recurrence_interval: recurrence_settings.interval,
@@ -118,7 +120,11 @@ export async function getTransactions(userId: string) {
       recurrence_settings,
       eq(transactions.recurrence_id, recurrence_settings.recurrence_id)
     )
-    .where(eq(transactions.user_id, userId));
+    .where(and(
+      eq(transactions.user_id, userId),
+      isNull(transactions.deleted_at)
+    ))
+    .orderBy(desc(transactions.transaction_date));
 
    
 
@@ -144,7 +150,15 @@ export async function addTransaction(userId: string, input: Omit<CreateTransacti
       payment_method: input.payment_method,
       status: input.status || 'completed',
       recurring: input.recurring || false,
+      recurrence_id: input.recurrence_id || null,
+      parent_transaction_id: input.parent_transaction_id || null,
     };
+
+    console.log('Creating transaction with data:', { 
+      date: newTransaction.transaction_date.toISOString(),
+      recurrence_id: newTransaction.recurrence_id,
+      parent_id: newTransaction.parent_transaction_id
+    });
 
     const result = await db.insert(transactions).values(newTransaction).returning();
 

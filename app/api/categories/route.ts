@@ -21,13 +21,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const { user_id, category_name, category_description, tags, budget, spent, color, predefined, image, recurring } = await request.json();
+        const { user_id, category_name, category_description, tags, budget, spent, color, predefined, image, icon, recurring } = await request.json();
 
         if (!user_id || !category_name) {
             return NextResponse.json({ success: false, message: 'user_id and category_name are required' }, { status: 400 });
         }
 
-        const result = await addCategory(user_id, category_name, category_description, tags, budget, spent, color, predefined, image, recurring);
+        const result = await addCategory(user_id, category_name, category_description, tags, budget, spent, color, predefined, image, icon, recurring);
         return NextResponse.json(result);
     } catch (error) {
         console.error("Error adding category:", error);
@@ -37,13 +37,13 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
     try {
-        const { category_id, category_name, category_description, tags, budget, spent, color, predefined, image, recurring } = await request.json();
+        const { category_id, category_name, category_description, tags, budget, spent, color, predefined, image, icon, recurring } = await request.json();
 
         if (!category_id || !category_name) {
             return NextResponse.json({ success: false, message: 'category_id and category_name are required' }, { status: 400 });
         }
 
-        const result = await editCategory(category_id, category_name, category_description, tags, budget, spent, color, predefined, image, recurring);
+        const result = await editCategory(category_id, category_name, category_description, tags, budget, spent, color, predefined, image, icon, recurring);
         return NextResponse.json(result);
     } catch (error) {
         console.error("Error updating category:", error);

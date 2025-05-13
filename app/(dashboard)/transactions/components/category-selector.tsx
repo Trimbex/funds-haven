@@ -4,8 +4,24 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { useTransactions } from '@/app/context/transactionsContext'
 import { Badge } from '@/components/ui/badge'
-import { X, Plus } from 'lucide-react'
+import { X, Plus, Tag, CreditCard, ShoppingCart, Home, Utensils, Car, Gift, Briefcase, Heart, Plane, Book, DollarSign } from 'lucide-react'
 import { TransactionCategory } from '@/app/server/transactions/transactions'
+import Image from 'next/image'
+
+const iconMap: { [key: string]: React.ReactNode } = {
+  "Tag": <Tag />,
+  "CreditCard": <CreditCard />,
+  "ShoppingCart": <ShoppingCart />,
+  "Home": <Home />,
+  "Utensils": <Utensils />,
+  "Car": <Car />,
+  "Gift": <Gift />,
+  "Briefcase": <Briefcase />,
+  "Heart": <Heart />,
+  "Plane": <Plane />,
+  "Book": <Book />,
+  "DollarSign": <DollarSign />
+}
 
 interface CategorySelectorProps {
   selectedCategories: TransactionCategory[]
@@ -37,6 +53,35 @@ export function CategorySelector({ selectedCategories, onChange }: CategorySelec
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
+
+  // Helper function to render category icon
+  const renderCategoryIcon = (category: any, size = 'small') => {
+    // First try to use the icon if available
+    if (category.icon && iconMap[category.icon]) {
+      return React.cloneElement(iconMap[category.icon] as React.ReactElement, { 
+        className: size === 'small' ? "h-3 w-3" : "h-4 w-4",
+        color: "currentColor"
+      });
+    } 
+    // Then fall back to image if available
+    else if (category.image) {
+      return (
+        <div className={size === 'small' ? "w-3 h-3" : "w-4 h-4"}>
+          <Image 
+            src={category.image} 
+            alt="" 
+            width={size === 'small' ? 12 : 16} 
+            height={size === 'small' ? 12 : 16} 
+            className="object-contain"
+          />
+        </div>
+      );
+    }
+    // Finally, use a default tag icon
+    else {
+      return <Tag className={size === 'small' ? "h-3 w-3" : "h-4 w-4"} />;
+    }
+  };
 
   // Filter categories based on input
   const filteredCategories = inputValue 
@@ -95,23 +140,29 @@ export function CategorySelector({ selectedCategories, onChange }: CategorySelec
   return (
     <div className="w-full relative">
       <div className="flex flex-wrap gap-2 mb-2">
-        {selectedCategories.map((category, index) => (
-          <Badge 
-            key={index} 
-            style={{ 
-              backgroundColor: category.id ? 
-                categories.find(c => c.category_id === category.id)?.color || '#e5e7eb' : 
-                '#e5e7eb' 
-            }}
-            className="flex items-center gap-1 px-3 py-1 text-sm"
-          >
-            {category.name}
-            <X 
-              className="h-3 w-3 cursor-pointer opacity-70 hover:opacity-100" 
-              onClick={() => handleRemoveCategory(index)} 
-            />
-          </Badge>
-        ))}
+        {selectedCategories.map((category, index) => {
+          const matchedCategory = category.id ? 
+            categories.find(c => c.category_id === category.id) : null;
+          
+          return (
+            <Badge 
+              key={index} 
+              style={{ 
+                backgroundColor: matchedCategory?.color || '#e5e7eb'
+              }}
+              className="flex items-center gap-1 px-3 py-1 text-sm"
+            >
+              <span className="mr-1 flex-shrink-0">
+                {matchedCategory ? renderCategoryIcon(matchedCategory) : <Tag className="h-3 w-3" />}
+              </span>
+              {category.name}
+              <X 
+                className="h-3 w-3 cursor-pointer opacity-70 hover:opacity-100 ml-1" 
+                onClick={() => handleRemoveCategory(index)} 
+              />
+            </Badge>
+          );
+        })}
       </div>
 
       <div className="relative">
@@ -138,9 +189,11 @@ export function CategorySelector({ selectedCategories, onChange }: CategorySelec
                   className="flex items-center px-4 py-2 text-sm cursor-pointer hover:bg-gray-100"
                 >
                   <div 
-                    className="h-3 w-3 rounded-full mr-2" 
+                    className="h-5 w-5 rounded-full mr-2 flex items-center justify-center" 
                     style={{ backgroundColor: category.color || '#e5e7eb' }}
-                  />
+                  >
+                    {renderCategoryIcon(category, 'medium')}
+                  </div>
                   {category.category_name}
                 </div>
               ))

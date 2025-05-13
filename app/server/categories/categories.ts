@@ -9,7 +9,7 @@ export async function getCategories(id: string) {
     return categories;
 }
 
-export async function addCategory(user_id: string, category_name: string, category_description: string, tags: any, budget: string, spent: string, color: string, predefined: boolean, image: string, recurring: boolean) {
+export async function addCategory(user_id: string, category_name: string, category_description: string, tags: any, budget: string, spent: string, color: string, predefined: boolean, image: string, icon: string, recurring: boolean) {
     try {
       const result = await db.insert(t.categories).values({
         user_id,
@@ -21,6 +21,7 @@ export async function addCategory(user_id: string, category_name: string, catego
         color,
         predefined,
         image,
+        icon,
         recurring
       });
   
@@ -31,7 +32,7 @@ export async function addCategory(user_id: string, category_name: string, catego
     }
   }
 
-export async function editCategory(category_id: string, category_name: string, category_description: string, tags: any, budget: string, spent: string, color: string, predefined: boolean, image: string, recurring: boolean) {
+export async function editCategory(category_id: string, category_name: string, category_description: string, tags: any, budget: string, spent: string, color: string, predefined: boolean, image: string, icon: string, recurring: boolean) {
     try {
         const result = await db.update(t.categories).set({
             category_name,
@@ -42,6 +43,7 @@ export async function editCategory(category_id: string, category_name: string, c
             color,
             predefined,
             image,
+            icon,
             recurring
         }).where(eq(t.categories.category_id, category_id));
     
