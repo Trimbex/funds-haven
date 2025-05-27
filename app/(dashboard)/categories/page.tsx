@@ -92,14 +92,14 @@ function CategoriesPage() {
   return (
     <>
       {isLoading ? <div className="h-screen flex items-center justify-center"><DotLoader/></div> :  
-        <>
+        <div className="container mx-auto py-10">
           <DashboardHeader
             title="Categories Overview"
             subtitle="Organize your finances with customized categories"
             stats={statCards}
           />
           
-          <div className="container mx-auto px-6 py-4">
+          <div className="px-0 md:px-0 py-4">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm">
               <div className="flex-1 w-full md:w-auto">
                 <div className="relative w-full max-w-md">
@@ -172,7 +172,7 @@ function CategoriesPage() {
             onClose={() => setIsFormOpen(false)}
             mode="add"
           />
-        </>
+        </div>
       }
     </>
   );

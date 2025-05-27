@@ -74,7 +74,7 @@ function AccountsContent() {
   ];
 
   return (
-    <>
+    <div className="container mx-auto py-10">
       <DashboardHeader
         title="My Accounts"
         subtitle="Manage your accounts and track your balances"
@@ -126,7 +126,7 @@ function AccountsContent() {
 
       {/* Add Account Modal */}
       <AddAccount />
-    </>
+    </div>
   );
 }
 

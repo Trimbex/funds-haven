@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useFormContext } from  "@/app/context/FormContext";
 import { useAuthContext } from "@/app/context/authContext"
-import { addAccount } from "@/app/api/accounts/account";
+import { addAccount } from "@/app/server/accounts/accounts";
 import { useRouter } from "next/navigation";
 
 

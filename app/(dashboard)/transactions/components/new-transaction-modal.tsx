@@ -83,12 +83,13 @@ export function NewTransactionModal({
       const newTransaction = {
         amount: parseFloat(amount),
         description,
-        transaction_date: transactionDate, // Send as ISO string
+        transaction_date: transactionDate,
         transaction_type: type,
         categories: selectedCategories,
         recurring: false,
         status: status,
-        account_id: accountId === 'cash' ? accountId : (accountId || undefined)
+        account_id: accountId === 'cash' ? undefined : (accountId || undefined),
+        payment_method: accountId === 'cash' ? 'cash' : 'account'
       }
 
       console.log('Full transaction object:', JSON.stringify(newTransaction, null, 2)) 
