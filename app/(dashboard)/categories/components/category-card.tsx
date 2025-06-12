@@ -67,7 +67,7 @@ const handleDelete = async () => {
 
   return (
     <>
-        <Card className="relative flex flex-row overflow-hidden w-full">
+        <Card className="relative flex flex-row overflow-hidden w-full lg:w-2/3">
             <div 
             style={{backgroundColor: category.color}}
             className={`absolute top-0 left-0 w-full h-2 ${!category.color ? 'bg-neutral-950' : ''} z-10`}

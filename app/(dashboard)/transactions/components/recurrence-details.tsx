@@ -17,7 +17,7 @@ type RecurrenceDetailsProps = {
   frequency?: string
   interval?: number
   startDate?: Date
-  endDate?: Date | null
+  endDate?: Date | null 
 }
 
 export function RecurrenceDetails({ 
