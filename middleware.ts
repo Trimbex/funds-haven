@@ -1,19 +1,38 @@
-import { type NextRequest } from "next/server";
-import { updateSession } from "@/app/utils/supabase/middleware";
+import { withAuth } from "next-auth/middleware"
+import { NextResponse } from "next/server"
 
-export async function middleware(request: NextRequest) {
-  return await updateSession(request);
-}
+export default withAuth(
+  function middleware(req) {
+    // If user is logged in and they try to access login or register pages, redirect them to the dashboard
+    if (req.nextauth.token && (
+      req.nextUrl.pathname.startsWith('/login') || 
+      req.nextUrl.pathname.startsWith('/register')
+    )) {
+      return NextResponse.redirect(new URL('/', req.url))
+    }
+
+    // Allow the request to continue
+    return NextResponse.next()
+  },
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        // If accessing protected routes, require authentication
+        if (req.nextUrl.pathname.startsWith('/dashboard') || 
+            req.nextUrl.pathname.startsWith('/accounts') ||
+            req.nextUrl.pathname.startsWith('/transactions') ||
+            req.nextUrl.pathname.startsWith('/categories')) {
+          return !!token
+        }
+        // Public routes (login, register, home) are always accessible
+        return true
+      },
+    },
+  }
+)
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    '/((?!api|_next/static|_next/image|favicon.ico|verify-request).*)',
   ],
-};
+}

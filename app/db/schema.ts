@@ -6,17 +6,55 @@ const timestamps = {
   deleted_at: t.timestamp(),
 };
 
+// Updated users table for NextAuth compatibility
 export const users = t.pgTable('users', {
-  id: t.uuid('id').primaryKey().notNull(),
-  plaid_id: t.text('plaid_id'),
+  id: t.uuid('id').primaryKey().notNull().defaultRandom(), // Keep UUID but auto-generate
+  name: t.text('name'), // NextAuth standard field
   firstName: t.text('first_name'),
   lastName: t.text('last_name'),
   email: t.varchar('email').notNull().unique(),
-  // phone: t.text('phone'),
+  emailVerified: t.timestamp('emailVerified'), // NextAuth standard field
+  image: t.text('image'), // NextAuth standard field for profile pictures
+  password: t.text('password'), // For password-based auth (hashed)
+  plaid_id: t.text('plaid_id'),
   updated_at: timestamps.updated_at,
   created_at: timestamps.created_at,
 });
 
+// NextAuth required tables - renamed to avoid conflict
+export const nextAuthAccounts = t.pgTable('nextauth_accounts', {
+  userId: t.uuid('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: t.text('type').notNull(),
+  provider: t.text('provider').notNull(),
+  providerAccountId: t.text('providerAccountId').notNull(),
+  refresh_token: t.text('refresh_token'),
+  access_token: t.text('access_token'),
+  expires_at: t.integer('expires_at'),
+  token_type: t.text('token_type'),
+  scope: t.text('scope'),
+  id_token: t.text('id_token'),
+  session_state: t.text('session_state'),
+}, (account) => ({
+  compoundKey: t.primaryKey({
+    columns: [account.provider, account.providerAccountId],
+  }),
+}));
+
+export const sessions = t.pgTable('sessions', {
+  sessionToken: t.text('sessionToken').notNull().primaryKey(),
+  userId: t.uuid('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  expires: t.timestamp('expires').notNull(),
+});
+
+export const verificationTokens = t.pgTable('verificationTokens', {
+  identifier: t.text('identifier').notNull(),
+  token: t.text('token').notNull(),
+  expires: t.timestamp('expires').notNull(),
+}, (vt) => ({
+  compoundKey: t.primaryKey({ columns: [vt.identifier, vt.token] }),
+}));
+
+// Your existing app-specific tables (keep original accounts table as-is)
 export const accounts = t.pgTable('accounts', {
   account_id: t.uuid('id').primaryKey().defaultRandom().notNull(),
   user_id: t.uuid('user_id').notNull().references(() => users.id),
@@ -29,7 +67,6 @@ export const accounts = t.pgTable('accounts', {
   updated_at: timestamps.updated_at,
   created_at: timestamps.created_at,
 });
-
 
 export const categories = t.pgTable('categories',{
   category_id: t.uuid('id').primaryKey().defaultRandom().notNull(),
@@ -80,6 +117,14 @@ export const recurrence_settings = t.pgTable('recurrence_settings', {
   end_date: t.timestamp('end_date'),
   // ...timestamps
 });
+
+// Export types for TypeScript
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type NextAuthAccount = typeof nextAuthAccounts.$inferSelect;
+export type NewNextAuthAccount = typeof nextAuthAccounts.$inferInsert;
+export type Session = typeof sessions.$inferSelect;
+export type NewSession = typeof sessions.$inferInsert;
 
 
 

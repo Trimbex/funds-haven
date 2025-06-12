@@ -12,6 +12,7 @@
     "db:push": "bunx drizzle-kit push"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "^1.9.1",
     "@next/font": "^14.2.15",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-checkbox": "^1.1.4",
@@ -31,6 +32,7 @@
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.48.1",
     "@tanstack/react-table": "^8.21.2",
+    "bcryptjs": "^3.0.2",
     "chart.js": "^4.4.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -41,6 +43,7 @@
     "framer-motion": "^12.4.7",
     "lucide-react": "^0.468.0",
     "next": "^15.3.2",
+    "next-auth": "^4.24.11",
     "next-themes": "^0.4.4",
     "postgres": "^3.4.5",
     "react": "^18",
