@@ -1,14 +1,24 @@
 'use client';
 
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Wallet, CreditCard, DollarSign, ArrowUp, ArrowDown, Pencil, Trash2, Repeat } from 'lucide-react';
+import { 
+  Wallet, 
+  CreditCard, 
+  TrendingDown, 
+  Pencil, 
+  Trash2, 
+  Repeat,
+  ArrowUpRight,
+  ArrowDownRight,
+  Target
+} from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import CategoryForm from './category-form'; 
-
 import { useCategories } from '@/app/context/categoryContext';
 import {
   AlertDialog,
@@ -20,8 +30,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-
 
 export type Category = {
     category_id: string;
@@ -38,171 +46,242 @@ export type Category = {
     recurring: boolean;
 };
 
-
 export default function CategoryCard({ category }: { category: Category }) {
-//   const budget = 5000;
-//   const spent = 3500;
-  
-//   // Example tags for SEO
-//   const tags = ["Tag1", "Tag2", "Tag3"];
+  const { deleteCategory } = useCategories();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-const { deleteCategory } = useCategories();
-const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const handleDelete = async () => {
+    await deleteCategory(category.category_id);
+    setIsDeleteDialogOpen(false);
+  };
 
-const handleDelete = async () => {
-  await deleteCategory(category.category_id);
-  setIsDeleteDialogOpen(false);
-};
-
-  // Function to open the edit dialog
   const handleEditClick = () => {
     setIsEditDialogOpen(true);
   };
 
-  // Function to close the edit dialog
   const handleCloseDialog = () => {
     setIsEditDialogOpen(false);
   };
 
+  const budget = Number(category.budget) || 0;
+  const spent = Number(category.spent) || 0;
+  const remaining = budget - spent;
+  const spentPercentage = budget > 0 ? (spent / budget) * 100 : 0;
+  const isOverBudget = spent > budget;
+
   return (
     <>
-        <Card className="relative flex flex-row overflow-hidden w-full lg:w-2/3">
-            <div 
-            style={{backgroundColor: category.color}}
-            className={`absolute top-0 left-0 w-full h-2 ${!category.color ? 'bg-neutral-950' : ''} z-10`}
-            />
-
-            <div className='relative w-1/3 h-auto '>
-            <Image 
-                src={category.image} 
-                alt="category image" 
-                fill 
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" 
-                priority 
-                className='object-cover' 
-                />
-
-            </div>
-
-            <div className='w-2/3 '>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <CardTitle className='mt-4 text-4xl font-bold'>
-                            {category.category_name}
-                        </CardTitle>
-                        {category.recurring && <Badge variant="secondary" className="mt-4 flex items-center gap-1">
-                            <Repeat className="w-4 h-4" />
-                            Recurring
-                        </Badge>}
-                    </div>
-                    <CardDescription className='text-2xl'>
-                        {category.category_description}
-                    </CardDescription>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-4xl mx-auto"
+      >
+        <Card className="overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-300 bg-white/80 backdrop-blur-sm">
+          {/* Color accent bar */}
+          <div 
+            style={{ backgroundColor: category.color || '#1f2937' }}
+            className="h-1 w-full"
+          />
+          
+          <CardHeader className="pb-4">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-4">
+                {/* Category Image */}
+                <div className="relative w-16 h-16 rounded-2xl overflow-hidden shadow-md">
+                  <Image 
+                    src={category.image} 
+                    alt={category.category_name}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="text-cyan-500 hover:text-cyan-600" onClick={handleEditClick}>
-                        <Pencil className="w-5 h-5" />
-                    </Button>
-                    <Button variant="destructive" size="icon" onClick={() => setIsDeleteDialogOpen(true)}>
-                        <Trash2 className="w-5 h-5" />
-                    </Button>
-                </div>
-            </CardHeader>
-
-            <div className="px-6 mt-2">
-                <div className="flex items-center mb-2 flex-wrap gap-2">
+                
+                {/* Category Info */}
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <CardTitle className="text-2xl font-bold text-gray-900">
+                      {category.category_name}
+                    </CardTitle>
+                    {category.recurring && (
+                      <Badge variant="secondary" className="flex items-center gap-1 bg-blue-100 text-blue-700">
+                        <Repeat className="w-3 h-3" />
+                        Recurring
+                      </Badge>
+                    )}
+                  </div>
+                  <CardDescription className="text-gray-600 text-base">
+                    {category.category_description}
+                  </CardDescription>
+                  
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-2 mt-3">
                     {category.tags?.tags.map((tag, index) => (
-                        <Badge key={index} className="bg-gray-100 text-gray-800 hover:bg-gray-100 text-md rounded-full border-0 shadow-sm px-3 py-1">
+                      <Badge 
+                        key={index} 
+                        variant="outline"
+                        className="bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200"
+                      >
                         {tag}
-                    </Badge>
+                      </Badge>
                     ))}
+                  </div>
                 </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleEditClick}
+                  className="hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  className="hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {/* Budget Progress */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Budget Progress</span>
+                <span className="text-sm text-gray-500">
+                  {spentPercentage.toFixed(1)}% used
+                </span>
+              </div>
+              <Progress 
+                value={Math.min(spentPercentage, 100)} 
+                className={`h-2 ${isOverBudget ? 'bg-red-100' : 'bg-gray-100'}`}
+              />
+              {isOverBudget && (
+                <p className="text-sm text-red-600 flex items-center">
+                  <ArrowUpRight className="w-4 h-4 mr-1" />
+                  Over budget by ${Math.abs(remaining).toFixed(2)}
+                </p>
+              )}
             </div>
 
-            <CardContent>
-                <div className='mt-6 flex flex-row justify-between gap-2'>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Budget Card */}
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-500 rounded-xl">
+                      <Target className="w-5 h-5 text-white" />
+                    </div>
+                                         <div>
+                       <p className="text-sm font-medium text-blue-900">Budget</p>
+                       <p className="text-xl font-bold text-blue-900">${budget.toFixed(2)}</p>
+                     </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                    <Card className='h-full w-full flex flex-col items-center justify-center'>
-                            <CardTitle className='text-2xl text-center flex items-center gap-2'>
-                                <Wallet className="w-6 h-6 text-cyan-500" />
-                                Budget
-                            </CardTitle>
-                            <CardContent className="flex flex-col items-center justify-center">
-                                <div className="mt-4 text-4xl font-bold text-center">${category.budget}</div>
-                                <div className="flex items-center gap-1 mt-2 text-sm">
-                                    <ArrowDown className="w-4 h-4 text-red-500" />
-                                    <span className="text-red-500">5% less than last month</span>
-                                </div>
-                            </CardContent>
-                    </Card>
-                    
-                    <Card className='h-full w-full flex flex-col items-center justify-center'>
-                            <CardTitle className='text-2xl text-center flex items-center gap-2'>
-                                <CreditCard className="w-6 h-6 text-cyan-500" />
-                                Amount Spent
-                            </CardTitle>
-                            <CardContent className="flex flex-col items-center justify-center">
-                                <div className="mt-4 text-4xl font-bold text-center">${category.spent}</div>
-                                <div className="flex items-center gap-1 mt-2 text-sm">
-                                    <ArrowDown className="w-4 h-4 text-red-500" />
-                                    <span className="text-red-500">5% less than last month</span>
-                                </div>
-                            </CardContent>
-                    </Card>
-                    
-                    <Card className='h-full w-full flex flex-col items-center justify-center'>
-                            <CardTitle className='text-2xl text-center flex items-center gap-2'>
-                                <DollarSign className="w-6 h-6 text-cyan-500" />
-                                Remaining
-                            </CardTitle>
-                            <CardContent className="flex flex-col items-center justify-center">
-                                <div className="mt-4 text-4xl font-bold text-center">${category.budget - category.spent}</div>
-                                <div className="flex items-center gap-1 mt-2 text-sm">
-                                    <ArrowUp className="w-4 h-4 text-green-500" />
-                                    <span className="text-green-500">12% more than last month</span>
-                                </div>
-                            </CardContent>
-                    </Card>
+              {/* Spent Card */}
+              <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-orange-500 rounded-xl">
+                      <CreditCard className="w-5 h-5 text-white" />
+                    </div>
+                                         <div>
+                       <p className="text-sm font-medium text-orange-900">Spent</p>
+                       <p className="text-xl font-bold text-orange-900">${spent.toFixed(2)}</p>
+                     </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                </div>
-
-
-            </CardContent>
+              {/* Remaining Card */}
+              <Card className={`bg-gradient-to-br ${
+                isOverBudget 
+                  ? 'from-red-50 to-red-100 border-red-200' 
+                  : 'from-green-50 to-green-100 border-green-200'
+              }`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-xl ${
+                      isOverBudget ? 'bg-red-500' : 'bg-green-500'
+                    }`}>
+                      <Wallet className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className={`text-sm font-medium ${
+                        isOverBudget ? 'text-red-900' : 'text-green-900'
+                      }`}>
+                        {isOverBudget ? 'Over Budget' : 'Remaining'}
+                      </p>
+                      <p className={`text-xl font-bold ${
+                        isOverBudget ? 'text-red-900' : 'text-green-900'
+                      }`}>
+                        ${Math.abs(remaining).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
+            {/* Quick Stats */}
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <div className="flex items-center space-x-1">
+                  <TrendingDown className="w-4 h-4 text-green-500" />
+                  <span>5% less than last month</span>
+                </div>
+              </div>
+              <div className="text-sm text-gray-500">
+                Updated just now
+              </div>
+            </div>
+          </CardContent>
         </Card>
+      </motion.div>
 
-
-        <CategoryForm 
+      <CategoryForm 
         isOpen={isEditDialogOpen}
         onClose={handleCloseDialog}
         category={category}
-        mode='edit' // Pass the category to edit
+        mode='edit'
       />
 
-<AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="border-0 shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-xl font-bold text-gray-900">
+              Delete Category
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600">
               This will permanently delete the category "{category.category_name}" and all its associated data.
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="btn-outline-modern">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 text-white"
             >
-              Delete
+              Delete Category
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    
-      </>
+    </>
   );
 }

@@ -1,19 +1,13 @@
-// app/register/page.tsx
-import SignupWizard from './SignupWizard';
+"use client";
 
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { RegistrationWizard } from "./components/RegistrationWizard";
 
 export default function RegisterPage() {
   return (
-    // <div className="relative min-h-screen">
-    //   <div className="absolute top-1/4 w-full max-w-full px-3 text-center flex-0">
-    //     <p className="mt-12 text-3xl">Build Your Profile</p>
-    //     <p className="text-xl font-normal dark:text-white text-slate-400">
-    //       This information will let us know more about you.
-    //     </p>
-        
-    //   </div>
-    // </div>
-
-    <SignupWizard />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <RegistrationWizard />
+    </div>
   );
 }

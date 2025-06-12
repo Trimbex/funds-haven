@@ -1,5 +1,5 @@
 'use client'
-import DotLoader from "@/components/loader/loader";
+import { TransactionTableSkeleton } from "@/components/ui/skeletons";
 import * as React from 'react'
 import { useTransactions } from '@/app/context/transactionsContext'
 import { NewTransactionModal } from './components/new-transaction-modal'
@@ -735,7 +735,7 @@ export function TransactionsTable() {
 
   return (
     <div className="w-full">
-      {isLoading ? <div className="h-screen flex items-center justify-center"><DotLoader/></div>: null}
+      {isLoading ? <TransactionTableSkeleton /> : null}
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
