@@ -3,40 +3,43 @@
 import { db } from '@/app/db/index'
 import * as t from '@/app/db/schema'
 import { eq } from 'drizzle-orm';
-import { supabase } from '@/app/utils/supabase/client'
+import { useSession } from 'next-auth/react'
 
-
-export async function getCurrentUserID() {
+export function useCurrentUserID() {
+  const { data: session, status } = useSession();
        
-    try {
-      const { data, error } = await supabase.auth.getUser();
-      
-      if (error) throw error; // Explicitly handle Supabase errors
-  
-      const userId = data.user.id;
-  
-      if (!userId) {
-        return {
-          success: false,
-          message: "User is not logged in.",
-          userId: null,
-        };
-      }
-  
-      return {
-        success: true,
-        message: "User ID retrieved successfully.",
-        userId,
-      };
-    } catch (error) {
-      console.error("Error fetching user ID:", error);
-      return {
-        success: false,
-        message: "Failed to retrieve user ID.",
-        error: error instanceof Error ? error.message : "Unknown error",
-        userId: null,
-      };
-    }
+  if (status === 'loading') {
+    return {
+      success: false,
+      message: "Session is loading.",
+      userId: null,
+    };
   }
+
+  if (status === 'unauthenticated' || !session?.user) {
+    return {
+      success: false,
+      message: "User is not logged in.",
+      userId: null,
+    };
+  }
+
+  // User ID is set in the NextAuth session callback
+  const userId = (session.user as any).id;
+
+  if (!userId) {
+    return {
+      success: false,
+      message: "User ID not found in session.",
+      userId: null,
+    };
+  }
+
+  return {
+    success: true,
+    message: "User ID retrieved successfully.",
+    userId,
+  };
+}
 
 

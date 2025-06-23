@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from "sonner";
-import { getCurrentUserID } from '@/app/api/general';
+import { useCurrentUserID } from '@/app/api/general';
 
 // Define types for our context
 interface Account {
@@ -62,18 +62,18 @@ export const AccountsProvider: React.FC<AccountsProviderProps> = ({ children }) 
   const [showDialog, setShowDialog] = useState<boolean>(false);
   const [dialogLoading, setDialogLoading] = useState<boolean>(false);
 
-  // Get User ID on component mount
+  // Get User ID using the hook
+  const userResponse = useCurrentUserID();
+
+  // Set user ID when response changes
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await getCurrentUserID(); 
-        setUser(response.userId || null);
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
-      }
-    };
-    fetchUser();
-  }, []);
+    if (userResponse.success && userResponse.userId) {
+      setUser(userResponse.userId);
+    } else if (!userResponse.success && userResponse.message !== "Session is loading.") {
+      setUser(null);
+      setLoading(false);
+    }
+  }, [userResponse]);
 
   // Fetch accounts when user is available
   useEffect(() => {

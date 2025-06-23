@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Transaction, TransactionType, TransactionStatus, PaymentMethod, TransactionCategory } from '@/app/server/transactions/transactions';
-import { getCurrentUserID } from '../api/general';
+import { useCurrentUserID } from '../api/general';
 
 // Define the shape of our context
 interface TransactionsContextType {
@@ -68,51 +68,17 @@ export const TransactionsProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState([]);
 
+  // Get User ID using the hook
+  const userResponse = useCurrentUserID();
+
+  // Set user ID when response changes
   useEffect(() => {
-
-    const fetchUserID = async () => {
-        try{
-            const response = await getCurrentUserID();
-            
-
-            if(response.success){
-                setUserID(response.userId);
-                console.log("User ID:", response.userId);
-            } 
-            
-
-        } 
-        catch (error)
-        {
-           
-                console.error('Failed to fetch user ID:', error);           
-        }
-}; 
-fetchUserID(); 
-},[]);
-
-
-
-// useEffect(() => {
-//   const addTestTransaction = async () => {
-//     if (userID && transactions.length === 0) {
-//       const testTransaction = {
-//         amount: 100,
-//         description: "Test Transaction",
-//        transaction_date: new Date(),
-//         transaction_type: "expense" as TransactionType,
-//         categories: [{ id: null, name: "Test Category" }],
-//         recurring: false,
-//         status: "completed" as TransactionStatus
-//       };
-
-//       console.log("Adding test transaction:", testTransaction);
-//       await addTransaction(userID, testTransaction);
-//     }
-//   };
-
-//   addTestTransaction();
-// }, [transactions, userID]);
+    if (userResponse.success && userResponse.userId) {
+      setUserID(userResponse.userId);
+    } else if (!userResponse.success && userResponse.message !== "Session is loading.") {
+      setUserID(null);
+    }
+  }, [userResponse]);
 
   // Fetch all transactions for a user
   const fetchTransactions = async (userId: string) => {

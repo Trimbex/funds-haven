@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getCurrentUserID } from '../api/general';
+import { useCurrentUserID } from '../api/general';
 
 export type Category = {
     category_id: string;
@@ -37,27 +37,18 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [userID, setUserID] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    // Get User ID using the hook
+    const userResponse = useCurrentUserID();
+
+    // Set user ID when response changes
     useEffect(() => {
-
-        const fetchUserID = async () => {
-            try{
-                const response = await getCurrentUserID();
-                
-
-                if(response.success){
-                    setUserID(response.userId);
-                } 
-                
-
-            } 
-            catch (error)
-            {
-               
-                    console.error('Failed to fetch user ID:', error);           
-            }
-    }; 
-    fetchUserID(); 
-    },[]);
+        if (userResponse.success && userResponse.userId) {
+            setUserID(userResponse.userId);
+        } else if (!userResponse.success && userResponse.message !== "Session is loading.") {
+            setUserID(null);
+            setIsLoading(false);
+        }
+    }, [userResponse]);
 
     useEffect(() => {
         const fetchCategories = async () => {
