@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from "framer-motion";
 import CategoryCard from './components/category-card';
 import { CategoryProvider, useCategories } from '@/app/context/categoryContext';
+import { TransactionsProvider, useTransactions } from '@/app/context/transactionsContext';
 import { CategoryCardSkeleton, DashboardStatsSkeleton } from "@/components/ui/skeletons";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Layers, TrendingUp, PiggyBank, Wallet, Filter } from "lucide-react";
@@ -14,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function CategoriesPage() {
   const { categories, isLoading, addCategory } = useCategories();
+  const { transactions } = useTransactions();
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchCriteria, setSearchCriteria] = React.useState({
@@ -47,11 +49,23 @@ function CategoriesPage() {
     }).format(amount)
   }
 
+  const totalSpent = React.useMemo(() => {
+    if (!categories || !transactions) return 0;
+
+    const spentPerCategory = categories.map(category =>
+      transactions
+        .filter(t => t.transaction_type === 'expense' && t.categories.some(c => c.id === category.category_id))
+        .reduce((sum, t) => sum + Number(t.amount), 0)
+    );
+
+    return spentPerCategory.reduce((total, spent) => total + spent, 0);
+  }, [categories, transactions]);
+
   const stats = {
     totalCategories: categories.length,
     totalBudget: categories.reduce((sum, cat) => sum + Number(cat.budget), 0),
     activeCategories: categories.filter(cat => Number(cat.budget) > 0).length,
-    totalSpent: categories.reduce((sum, cat) => sum + Number(cat.spent), 0),
+    totalSpent: totalSpent,
   };
 
   if (isLoading) {
@@ -296,7 +310,9 @@ function CategoriesPage() {
 export default function Page() {
   return (
     <CategoryProvider>
-      <CategoriesPage />
+      <TransactionsProvider>
+        <CategoriesPage />
+      </TransactionsProvider>
     </CategoryProvider>
   );
 }

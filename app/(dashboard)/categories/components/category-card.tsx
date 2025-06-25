@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import CategoryForm from './category-form'; 
 import { useCategories } from '@/app/context/categoryContext';
+import { useTransactions } from '@/app/context/transactionsContext';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +49,7 @@ export type Category = {
 
 export default function CategoryCard({ category }: { category: Category }) {
   const { deleteCategory } = useCategories();
+  const { transactions } = useTransactions();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -64,8 +66,13 @@ export default function CategoryCard({ category }: { category: Category }) {
     setIsEditDialogOpen(false);
   };
 
+  const spent = React.useMemo(() => {
+    return transactions
+      .filter(t => t.transaction_type === 'expense' && t.categories.some(c => c.id === category.category_id))
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+  }, [transactions, category.category_id]);
+
   const budget = Number(category.budget) || 0;
-  const spent = Number(category.spent) || 0;
   const remaining = budget - spent;
   const spentPercentage = budget > 0 ? (spent / budget) * 100 : 0;
   const isOverBudget = spent > budget;
