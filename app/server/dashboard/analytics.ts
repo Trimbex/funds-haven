@@ -49,10 +49,31 @@ export type DashboardAnalytics = {
   };
 };
 
-export async function getDashboardAnalytics(userId: string): Promise<{ success: boolean; analytics?: DashboardAnalytics; message?: string }> {
+export async function getDashboardAnalytics(userId: string, timeFrame: string = '6m'): Promise<{ success: boolean; analytics?: DashboardAnalytics; message?: string }> {
   try {
     // Get current date and calculate periods
     const now = new Date();
+    
+    let startDate: Date;
+    switch (timeFrame) {
+      case '1m':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        break;
+      case '3m':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+        break;
+      case '1y':
+        startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1);
+        break;
+      case 'all':
+        startDate = new Date(0); // Epoch start
+        break;
+      case '6m':
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+        break;
+    }
+
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
@@ -61,8 +82,7 @@ export async function getDashboardAnalytics(userId: string): Promise<{ success: 
     const [
       userAccounts,
       userCategories,
-      currentMonthTransactions,
-      lastMonthTransactions,
+      allTransactions,
       recentTransactionData
     ] = await Promise.all([
       // Get all accounts
@@ -75,22 +95,12 @@ export async function getDashboardAnalytics(userId: string): Promise<{ success: 
         .from(categories)
         .where(eq(categories.user_id, userId)),
 
-      // Get current month transactions
+      // Get all transactions for the last 6 months
       db.select()
         .from(transactions)
         .where(and(
           eq(transactions.user_id, userId),
-          gte(transactions.transaction_date, currentMonthStart),
-          isNull(transactions.deleted_at)
-        )),
-
-      // Get last month transactions
-      db.select()
-        .from(transactions)
-        .where(and(
-          eq(transactions.user_id, userId),
-          gte(transactions.transaction_date, lastMonthStart),
-          lte(transactions.transaction_date, lastMonthEnd),
+          gte(transactions.transaction_date, startDate),
           isNull(transactions.deleted_at)
         )),
 
@@ -104,6 +114,13 @@ export async function getDashboardAnalytics(userId: string): Promise<{ success: 
         .orderBy(desc(transactions.transaction_date))
         .limit(10)
     ]);
+
+    // Filter transactions for current and last month
+    const currentMonthTransactions = allTransactions.filter(t => new Date(t.transaction_date) >= currentMonthStart);
+    const lastMonthTransactions = allTransactions.filter(t => {
+      const date = new Date(t.transaction_date);
+      return date >= lastMonthStart && date <= lastMonthEnd;
+    });
 
     // Calculate total net worth
     const totalNetWorth = userAccounts.reduce((total, account) => 
@@ -221,16 +238,34 @@ export async function getDashboardAnalytics(userId: string): Promise<{ success: 
       };
     });
 
-    // Simple monthly trends calculation (simplified for performance)
+    // Generate monthly trends for the last 6 months
+    const monthlyTrendsData: { [key: string]: { income: number; expenses: number } } = {};
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    const dateTo = new Date();
+    const dateFrom = new Date(startDate);
+    
+    while (dateFrom <= dateTo) {
+      const monthKey = `${monthNames[dateFrom.getMonth()]} ${dateFrom.getFullYear()}`;
+      monthlyTrendsData[monthKey] = { income: 0, expenses: 0 };
+      dateFrom.setMonth(dateFrom.getMonth() + 1);
+    }
+
+    allTransactions.forEach(t => {
+      const d = new Date(t.transaction_date);
+      const monthKey = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+      if (monthlyTrendsData[monthKey]) {
+        if (t.transaction_type === 'income') {
+          monthlyTrendsData[monthKey].income += parseFloat(t.amount.toString());
+        } else {
+          monthlyTrendsData[monthKey].expenses += parseFloat(t.amount.toString());
+        }
+      }
+    });
+
     const monthlyTrends = {
-      income: [
-        { month: 'Last', amount: lastMonthIncome },
-        { month: 'Current', amount: currentMonthIncome }
-      ],
-      expenses: [
-        { month: 'Last', amount: lastMonthExpenses },
-        { month: 'Current', amount: currentMonthExpenses }
-      ],
+      income: Object.entries(monthlyTrendsData).map(([month, { income }]) => ({ month, amount: income })),
+      expenses: Object.entries(monthlyTrendsData).map(([month, { expenses }]) => ({ month, amount: expenses })),
     };
 
     // Calculate investment growth (simplified)

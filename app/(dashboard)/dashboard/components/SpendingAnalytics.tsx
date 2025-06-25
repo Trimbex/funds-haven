@@ -5,6 +5,9 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useDashboardAnalytics } from '@/app/hooks/useDashboardAnalytics';
+import InteractiveSpendingChart from './InteractiveSpendingChart';
+import { TimeFrame } from '@/app/hooks/useDashboardAnalytics';
+import { Button } from '@/components/ui/button';
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -25,7 +28,7 @@ const categoryColors: { [key: string]: string } = {
 };
 
 export default function SpendingAnalytics() {
-  const { analytics: data, isLoading: loading, error } = useDashboardAnalytics();
+  const { analytics: data, isLoading: loading, error, timeFrame, setTimeFrame } = useDashboardAnalytics();
 
   if (loading) {
     return (
@@ -63,19 +66,40 @@ export default function SpendingAnalytics() {
     );
   }
 
+  const chartData = data.monthlyTrends.income.map((item, index) => ({
+    month: item.month,
+    income: item.amount,
+    expenses: data.monthlyTrends.expenses[index].amount,
+  }));
+
   return (
     <motion.div variants={fadeIn} initial="initial" animate="animate">
       <Card className="border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
-            Spending Analytics
-          </CardTitle>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            Category breakdown for this month
-          </p>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
+              Spending Analytics
+            </CardTitle>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Category breakdown for this month
+            </p>
+          </div>
+          <div className="flex space-x-2">
+            {(['1m', '3m', '6m', '1y', 'all'] as TimeFrame[]).map((tf) => (
+              <Button
+                key={tf}
+                variant={timeFrame === tf ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTimeFrame(tf)}
+              >
+                {tf.toUpperCase()}
+              </Button>
+            ))}
+          </div>
         </CardHeader>
         
         <CardContent className="space-y-6">
+          <InteractiveSpendingChart data={chartData} />
           {data.spendingCategories.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p>No spending data available</p>

@@ -4,6 +4,9 @@ import React, { Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDashboardAnalytics } from '@/app/hooks/useDashboardAnalytics';
+import CategoryPieChart from './components/CategoryPieChart';
+import BudgetBarChart from './components/BudgetBarChart';
 
 // Lazy load dashboard sections
 const QuickStats = lazy(() => import('./components/QuickStats'));
@@ -87,6 +90,7 @@ const RecentTransactionsLoading = () => (
 );
 
 export default function Dashboard() {
+  const { analytics: data, isLoading: loading } = useDashboardAnalytics();
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="container mx-auto px-4 py-8 space-y-8">
@@ -144,11 +148,44 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
-        {/* Recent Transactions - Load last */}
+        {/* New Charts Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Spending by Category</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <SpendingAnalyticsLoading />
+              ) : (
+                <CategoryPieChart data={data?.spendingCategories ?? []} />
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Budget vs. Spending</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <SpendingAnalyticsLoading />
+              ) : (
+                <BudgetBarChart data={data?.spendingCategories ?? []} />
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Recent Transactions - Load last */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
         >
           <Suspense fallback={<RecentTransactionsLoading />}>
             <RecentTransactions />
