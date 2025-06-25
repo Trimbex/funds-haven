@@ -50,10 +50,33 @@ const renderCard = (company: string) => {
 const BankCard = ({ account, index }: BankCardProps) => {
   const [showDetails, setShowDetails] = React.useState<boolean>(false);
   const [showFullCardNumber, setShowFullCardNumber] = React.useState<boolean>(false);
+  const [transactionCount, setTransactionCount] = React.useState<number>(0);
+  const [loadingTransactions, setLoadingTransactions] = React.useState<boolean>(true);
   
   const balance = typeof account.balance === 'string' 
     ? parseFloat(account.balance) 
     : account.balance;
+
+  // Fetch transaction count for this account
+  React.useEffect(() => {
+    const fetchTransactionCount = async () => {
+      try {
+        setLoadingTransactions(true);
+        const response = await fetch(`/api/accounts/${account.account_id}/transactions/count`);
+        if (response.ok) {
+          const data = await response.json();
+          setTransactionCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching transaction count:', error);
+        setTransactionCount(0);
+      } finally {
+        setLoadingTransactions(false);
+      }
+    };
+
+    fetchTransactionCount();
+  }, [account.account_id]);
 
   const formatCardNumber = (cardNumber: string) => {
     if (showFullCardNumber) {
@@ -144,7 +167,9 @@ const BankCard = ({ account, index }: BankCardProps) => {
           <div className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-xl">
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-4 h-4 text-green-500" />
-              <span className="text-sm text-gray-600">5 transactions</span>
+              <span className="text-sm text-gray-600">
+                {loadingTransactions ? 'Loading...' : `${transactionCount} transaction${transactionCount !== 1 ? 's' : ''}`}
+              </span>
             </div>
             <div className="flex items-center space-x-2">
               <CalendarDays className="w-4 h-4 text-blue-500" />

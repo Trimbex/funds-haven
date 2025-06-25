@@ -128,72 +128,7 @@ export type Transaction = {
   parent_transaction_id?: string | null
 }
 
-// Sample data
-const data: Transaction[] = [
-  {
-    id: '1',
-    date: '2023-05-01',
-    description: 'Grocery Shopping',
-    category: 'Food',
-    amount: 85.75,
-    type: 'expense',
-    status: 'completed',
-  },
-  {
-    id: '2',
-    date: '2023-05-03',
-    description: 'Salary Deposit',
-    category: 'Income',
-    amount: 3500.00,
-    type: 'income',
-    status: 'completed',
-  },
-  {
-    id: '3',
-    date: '2023-05-05',
-    description: 'Rent Payment',
-    category: 'Housing',
-    amount: 1200.00,
-    type: 'expense',
-    status: 'completed',
-  },
-  {
-    id: '4',
-    date: '2023-05-10',
-    description: 'Freelance Work',
-    category: 'Income',
-    amount: 750.00,
-    type: 'income',
-    status: 'pending',
-  },
-  {
-    id: '5',
-    date: '2023-05-15',
-    description: 'Utility Bills',
-    category: 'Utilities',
-    amount: 145.30,
-    type: 'expense',
-    status: 'completed',
-  },
-  {
-    id: '6',
-    date: '2023-05-20',
-    description: 'Online Shopping',
-    category: 'Shopping',
-    amount: 67.99,
-    type: 'expense',
-    status: 'failed',
-  },
-  {
-    id: '7',
-    date: '2023-05-25',
-    description: 'Dividend Payment',
-    category: 'Investment',
-    amount: 120.50,
-    type: 'income',
-    status: 'completed',
-  },
-]
+
 
 // Helper function to render category icon
 const renderCategoryIcon = (category: any, size = 'small') => {

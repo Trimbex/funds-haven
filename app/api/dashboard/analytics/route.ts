@@ -4,6 +4,7 @@ import { getDashboardAnalytics } from '@/app/server/dashboard/analytics';
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const userId = url.searchParams.get('user_id');
+  const timeFrame = url.searchParams.get('timeFrame') || '6m';
 
   if (!userId) {
     return NextResponse.json({ 
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const result = await getDashboardAnalytics(userId);
+    const result = await getDashboardAnalytics(userId, timeFrame);
     
     if (result.success) {
       return NextResponse.json({ 

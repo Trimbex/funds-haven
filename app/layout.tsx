@@ -44,11 +44,12 @@ export const metadata: Metadata = {
     title: "Funds Haven - Financial Management Made Simple",
     description: "Transform your relationship with money with our intelligent platform.",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#3b82f6" },
     { media: "(prefers-color-scheme: dark)", color: "#1e40af" }

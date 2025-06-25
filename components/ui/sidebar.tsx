@@ -14,7 +14,7 @@ import {
   ChevronRight,
   Sparkles,
   Menu,
-  Bell
+  Mail
 } from 'lucide-react';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
@@ -48,7 +48,7 @@ const navLinks = [
   { 
     href: '/inbox', 
     label: 'Inbox', 
-    icon: Bell,
+    icon: Mail,
     color: 'text-yellow-600'
   },
   { 

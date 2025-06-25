@@ -17,7 +17,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const notificationId = params.notificationId
+    const { notificationId } = await params
 
     if (!notificationId) {
       return NextResponse.json({ error: 'Notification ID is required' }, { status: 400 })
@@ -57,7 +57,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const notificationId = params.notificationId
+    const { notificationId } = await params
 
     if (!notificationId) {
       return NextResponse.json({ error: 'Notification ID is required' }, { status: 400 })

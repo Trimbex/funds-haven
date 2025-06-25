@@ -268,9 +268,44 @@ export async function getDashboardAnalytics(userId: string, timeFrame: string = 
       expenses: Object.entries(monthlyTrendsData).map(([month, { expenses }]) => ({ month, amount: expenses })),
     };
 
-    // Calculate investment growth (simplified)
-    const investmentGrowth = totalNetWorth * 0.15; // Placeholder: 15% of net worth as investments
-    const investmentChange = 7.2; // Placeholder percentage
+    // Calculate investment growth from actual investment accounts
+    const investmentAccounts = userAccounts.filter(account => 
+      account.account_type === 'investment' || account.account_type === 'savings'
+    );
+    const investmentGrowth = investmentAccounts.reduce((total, account) => 
+      total + parseFloat(account.balance || '0'), 0
+    );
+
+    // Calculate investment change based on investment account transactions
+    const investmentTransactionsThisMonth = currentMonthTransactions
+      .filter(t => {
+        const account = userAccounts.find(acc => acc.account_id === t.account_id);
+        return account && (account.account_type === 'investment' || account.account_type === 'savings');
+      });
+    
+    const investmentTransactionsLastMonth = lastMonthTransactions
+      .filter(t => {
+        const account = userAccounts.find(acc => acc.account_id === t.account_id);
+        return account && (account.account_type === 'investment' || account.account_type === 'savings');
+      });
+
+    const thisMonthInvestmentGains = investmentTransactionsThisMonth
+      .filter(t => t.transaction_type === 'income')
+      .reduce((total, t) => total + parseFloat(t.amount.toString()), 0);
+      
+    const lastMonthInvestmentGains = investmentTransactionsLastMonth
+      .filter(t => t.transaction_type === 'income')
+      .reduce((total, t) => total + parseFloat(t.amount.toString()), 0);
+
+    const investmentChange = lastMonthInvestmentGains > 0 ? 
+      ((thisMonthInvestmentGains - lastMonthInvestmentGains) / lastMonthInvestmentGains) * 100 : 0;
+
+    // Calculate net worth change - need to get previous month's account balances
+    // For now, calculate based on income vs expenses this month compared to last month
+    const thisMonthNetFlow = currentMonthIncome - currentMonthExpenses;
+    const lastMonthNetFlow = lastMonthIncome - lastMonthExpenses;
+    const netWorthChange = lastMonthNetFlow !== 0 ? 
+      ((thisMonthNetFlow - lastMonthNetFlow) / Math.abs(lastMonthNetFlow)) * 100 : 0;
 
     const analytics: DashboardAnalytics = {
       quickStats: {
@@ -278,7 +313,7 @@ export async function getDashboardAnalytics(userId: string, timeFrame: string = 
         monthlyIncome: currentMonthIncome,
         monthlyExpenses: currentMonthExpenses,
         investmentGrowth,
-        netWorthChange: 2.84, // Placeholder - calculate based on previous month
+        netWorthChange,
         incomeChange,
         expenseChange: expenseChange * -1, // Negative because lower expenses are better
         investmentChange,
