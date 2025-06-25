@@ -5,6 +5,8 @@ import { recurrence_settings, transactions } from '@/app/db/schema';
 import { eq, and, desc, isNull } from 'drizzle-orm';
 import { isFloat64Array } from 'node:util/types';
 import { getRecurrenceSettings } from './recurrence';
+import { updateCategorySpending } from '@/app/server/categories/categories';
+import { createTransactionNotification } from '@/app/server/notifications/notifications';
 // import { v4 as uuidv4 } from 'uuid';
 
 // Type definitions
@@ -162,6 +164,29 @@ export async function addTransaction(userId: string, input: Omit<CreateTransacti
 
     const result = await db.insert(transactions).values(newTransaction).returning();
 
+    // Update category spending and check for budget alerts if this is an expense
+    if (newTransaction.transaction_type === 'expense' && newTransaction.categories.length > 0) {
+      const categoryIds = newTransaction.categories
+        .map(cat => cat.id)
+        .filter((id): id is string => id !== null);
+      
+      if (categoryIds.length > 0) {
+        await updateCategorySpending(userId, categoryIds);
+      }
+    }
+
+    // Create transaction notification
+    try {
+      await createTransactionNotification(
+        userId, 
+        newTransaction.transaction_type,
+        Number(newTransaction.amount),
+        newTransaction.description
+      );
+    } catch (error) {
+      console.warn('Failed to create transaction notification:', error);
+    }
+
     return { success: true, message: 'Transaction added successfully', transaction: result[0] };
   } catch (error) {
     console.error('Error adding transaction:', error);
@@ -233,6 +258,32 @@ export async function editTransaction(transactionId: string, userId: string, inp
     if (result.length === 0) {
       return { success: false, message: 'Failed to update transaction' };
     }
+
+    // Update category spending for both old and new categories if this affects expenses
+    const oldCategories = existingTransaction[0].categories as TransactionCategory[] || [];
+    const newCategories = processedInput.categories !== undefined ? processedInput.categories : oldCategories;
+    const oldTransactionType = existingTransaction[0].transaction_type;
+    const newTransactionType = processedInput.transaction_type !== undefined ? processedInput.transaction_type : oldTransactionType;
+
+    // Collect all categories that might be affected
+    const affectedCategoryIds = new Set<string>();
+    
+    if (oldTransactionType === 'expense') {
+      oldCategories.forEach(cat => {
+        if (cat.id) affectedCategoryIds.add(cat.id);
+      });
+    }
+    
+    if (newTransactionType === 'expense') {
+      newCategories.forEach(cat => {
+        if (cat.id) affectedCategoryIds.add(cat.id);
+      });
+    }
+
+    // Update category spending if any categories are affected
+    if (affectedCategoryIds.size > 0) {
+      await updateCategorySpending(userId, Array.from(affectedCategoryIds));
+    }
     
     return { success: true, message: 'Transaction updated successfully', transaction: result[0] };
   } catch (error) {
@@ -290,6 +341,18 @@ export async function deleteTransaction(
     
     if (result.length === 0) {
       return { success: false, message: 'Failed to delete transaction' };
+    }
+
+    // Update category spending if this was an expense transaction
+    if (existingTransaction[0].transaction_type === 'expense' && existingTransaction[0].categories) {
+      const categories = existingTransaction[0].categories as TransactionCategory[];
+      const categoryIds = categories
+        .map(cat => cat.id)
+        .filter((id): id is string => id !== null);
+      
+      if (categoryIds.length > 0) {
+        await updateCategorySpending(userId, categoryIds);
+      }
     }
     
     return { success: true, message: 'Transaction deleted successfully' };

@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth"
 import { DrizzleAdapter } from "@auth/drizzle-adapter"
 import EmailProvider from "next-auth/providers/email"
 import CredentialsProvider from "next-auth/providers/credentials"
+import GoogleProvider from "next-auth/providers/google"
 import { db } from "@/app/db"
 import * as schema from "@/app/db/schema"
 import { Resend } from "resend"
@@ -20,6 +21,10 @@ export const authOptions: NextAuthOptions = {
   }),
   
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
     // Magic Link Email Provider
     EmailProvider({
       server: {

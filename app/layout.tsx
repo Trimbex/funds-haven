@@ -4,6 +4,8 @@ import "./globals.css";
 import AuthSessionProvider from "./components/SessionProvider";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./lib/auth";
+import { ThemeProvider } from "./components/ThemeProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -61,10 +63,18 @@ export default async function RootLayout({
   const session = await getServerSession(authOptions);
 
   return (
-    <html lang="en" className={`${inter.variable} ${geist.variable} ${geistMono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body className="font-inter antialiased">
         <AuthSessionProvider session={session}>
-          {children}
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster />
+          </ThemeProvider>
         </AuthSessionProvider>
       </body>
     </html>

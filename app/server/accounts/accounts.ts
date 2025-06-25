@@ -4,6 +4,7 @@ import { db } from '@/app/db/index'
 import * as t from '@/app/db/schema'
 import { eq } from 'drizzle-orm';
 import { supabase } from '@/app/utils/supabase/client'
+import { createAccountNotification } from '@/app/server/notifications/notifications';
 
 export async function getAccounts(id: string) {
     const accounts = await db.select().from(t.accounts).where(eq(t.accounts.user_id, id));
@@ -22,6 +23,13 @@ export async function addAccount(user_id: string, account_name: string, account_
         isVerified,
         card_company
       });
+
+      // Create account notification
+      try {
+        await createAccountNotification(user_id, account_name, account_type);
+      } catch (error) {
+        console.warn('Failed to create account notification:', error);
+      }
   
       return { success: true, message: "Account added successfully", result };
     } catch (error) {

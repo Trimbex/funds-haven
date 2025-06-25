@@ -118,6 +118,27 @@ export const recurrence_settings = t.pgTable('recurrence_settings', {
   // ...timestamps
 });
 
+export const notifications = t.pgTable('notifications', {
+  notification_id: t.uuid('id').primaryKey().defaultRandom().notNull(),
+  user_id: t.uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  message: t.text('message').notNull(),
+  type: t.text('type').notNull(), // e.g., 'budget_alert', 'new_feature', 'security'
+  is_read: t.boolean('is_read').default(false).notNull(),
+  link: t.text('link'), // Optional link for navigation
+  created_at: timestamps.created_at,
+});
+
+export const user_notification_settings = t.pgTable('user_notification_settings', {
+  setting_id: t.uuid('id').primaryKey().defaultRandom().notNull(),
+  user_id: t.uuid('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
+  budget_alerts: t.boolean('budget_alerts').default(true).notNull(),
+  // e.g., when a budget category reaches 80%
+  budget_threshold: t.integer('budget_threshold').default(80).notNull(),
+  new_feature_updates: t.boolean('new_feature_updates').default(true).notNull(),
+  security_alerts: t.boolean('security_alerts').default(true).notNull(),
+  updated_at: timestamps.updated_at,
+});
+
 // Export types for TypeScript
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

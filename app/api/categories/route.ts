@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCategories,addCategory,editCategory,deleteCategory } from '@/app/server/categories/categories';
+import { getCategories,addCategory,editCategory,deleteCategory, updateCategorySpending } from '@/app/server/categories/categories';
 
 
 export async function GET(request: Request) {
@@ -11,11 +11,15 @@ export async function GET(request: Request) {
     }
   
     try {
-      const categories = await getCategories(userId);
-      return NextResponse.json({ success: true, categories });
+      const result = await getCategories(userId);
+      if (result.success) {
+        return NextResponse.json({ success: true, categories: result.categories });
+      } else {
+        return NextResponse.json({ success: false, message: result.message }, { status: 500 });
+      }
     } catch (error) {
-      console.error("Error fetching accounts:", error);
-      return NextResponse.json({ success: false, message: 'Failed to fetch accounts' }, { status: 500 });
+      console.error("Error fetching categories:", error);
+      return NextResponse.json({ success: false, message: 'Failed to fetch categories' }, { status: 500 });
     }
   }
 
@@ -64,6 +68,33 @@ export async function DELETE(request: Request) {
     } catch (error) {
         console.error("Error deleting category:", error);
         return NextResponse.json({ success: false, message: 'Failed to delete category' }, { status: 500 });
+    }
+}
+
+export async function PATCH(request: Request) {
+    try {
+        const { user_id, action } = await request.json();
+
+        if (!user_id) {
+            return NextResponse.json({ success: false, message: 'user_id is required' }, { status: 400 });
+        }
+
+        if (action === 'update_spending') {
+            // Get all categories for the user
+            const categoriesResult = await getCategories(user_id);
+            if (categoriesResult.success && categoriesResult.categories) {
+                const categoryIds = categoriesResult.categories.map(cat => cat.category_id);
+                const result = await updateCategorySpending(user_id, categoryIds);
+                return NextResponse.json(result);
+            } else {
+                return NextResponse.json({ success: false, message: 'Failed to get categories' }, { status: 500 });
+            }
+        }
+
+        return NextResponse.json({ success: false, message: 'Invalid action' }, { status: 400 });
+    } catch (error) {
+        console.error("Error updating category spending:", error);
+        return NextResponse.json({ success: false, message: 'Failed to update category spending' }, { status: 500 });
     }
 }
 

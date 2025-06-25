@@ -13,10 +13,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  Menu
+  Menu,
+  Bell
 } from 'lucide-react';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
+import { useNotifications } from '@/app/hooks/useNotifications';
 
 const navLinks = [
   { 
@@ -44,6 +46,12 @@ const navLinks = [
     color: 'text-orange-600'
   },
   { 
+    href: '/inbox', 
+    label: 'Inbox', 
+    icon: Bell,
+    color: 'text-yellow-600'
+  },
+  { 
     href: '/settings', 
     label: 'Settings', 
     icon: Settings,
@@ -59,6 +67,7 @@ export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { unreadCount } = useNotifications();
 
   const sidebarVariants = {
     expanded: { width: 280 },
@@ -166,7 +175,7 @@ export function Sidebar({ className }: SidebarProps) {
                   )}
                 >
                   <div className={cn(
-                    "p-2 rounded-lg transition-colors duration-200",
+                    "p-2 rounded-lg transition-colors duration-200 relative",
                     isActive 
                       ? "bg-white/20" 
                       : "group-hover:bg-white"
@@ -175,6 +184,12 @@ export function Sidebar({ className }: SidebarProps) {
                       "w-5 h-5 transition-colors duration-200",
                       isActive ? "text-white" : link.color
                     )} />
+                    {/* Notification badge for inbox */}
+                    {link.href === '/inbox' && unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
                   </div>
                   
                   <AnimatePresence mode="wait">
